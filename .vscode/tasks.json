@@ -9,7 +9,11 @@
         "-g",
         "${file}",
         "-o",
-        "${fileDirname}\\${fileBasenameNoExtension}.exe"
+        "${fileDirname}\\${fileBasenameNoExtension}.exe",
+        "-std=c++20",
+        "-static",
+        "-static-libgcc",
+        "-static-libstdc++"
       ],
       "options": {
         "cwd": "${fileDirname}"

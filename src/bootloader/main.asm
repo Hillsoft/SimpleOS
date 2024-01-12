@@ -46,10 +46,155 @@ main:
   mov ss, ax
   mov sp, 0x7C00
 
+  ; read from disk
+  ; BIOS should set DL to drive number
+  mov [ebr_drive_number], dl
+
+  mov ax, 1       ; LBA = 1
+  mov cl, 1       ; sector count
+  mov bx, 0x7E00  ; address to store result
+  call disk_read
+
+  mov si, msg_disk_loaded
+  call puts
+
   hlt
 
 .halt:
-jmp .halt
+  cli
+  hlt
+  jmp .halt
+
+; Prints a string to the screen
+; Params:
+;   - ds:si points to the target string
+puts:
+  ; save modified registers
+  push si
+  push ax
+
+  .loop:
+    lodsb
+    or al, al
+    jz .done
+
+    mov ah, 0x0e
+    int 0x10
+
+    jmp .loop
+
+  .done:
+  pop ax
+  pop si
+  ret
+
+;
+; Disk operations
+;
+
+;
+; Convert LBA address to CHS address
+; Parameters:
+;   - ax: LBA address
+; Returns:
+;   - cx[0-5]: sector number
+;   - cx[6-15]: cylinder
+;   - dh: head
+lba_to_chs:
+  push ax
+  push dx
+
+  xor dx, dx                          ; dx = 0
+  div word [bdb_sectors_per_track]    ; ax = LBA / sectors per track
+                                      ; dx = LBA % sectors per track
+  inc dx
+  mov cx, dx                          ; cx = sector
+
+  xor dx, dx
+  div word [bdb_heads]                ; ax = (LBA / sectors per track) / heads
+                                      ; dx = (LBA / sectors per track) % heads
+  mov dh, dl
+  mov ch, al
+  shl ah, 6
+  or cl, ah
+
+  pop ax
+  mov dl, al
+  pop ax
+  ret
+
+;
+; Reads sectors from disc
+; Parameters:
+;   - ax: LBA address
+;   - cl: number of sectors (up to 128)
+;   - dl: drive number
+;   - ex:bx: address to store data in
+disk_read:
+  push ax
+  push cx
+  push dx
+  push di
+
+  push cx
+  call lba_to_chs
+  pop ax
+
+  mov ah, 02h
+
+  mov di, 3     ; retry count
+
+  .retry:
+    pusha
+    stc
+    int 13h
+    jnc .done   ; carry cleared, success!
+
+    ; read failed
+    popa
+    call disk_reset
+    dec di
+    test di, di
+    jnz .retry
+
+  .fail:
+    ; attempts failed
+    jmp disk_error
+
+  .done:
+  popa
+
+  pop di
+  pop dx
+  pop cx
+  pop ax
+  ret
+
+;
+; Reset disc controller
+; Parameters:
+;   - dl: drive number
+disk_reset:
+  pusha
+  mov ah, 0
+  stc
+  int 13h
+  jc disk_error
+  popa
+  ret
+
+disk_error:
+  mov si, msg_disk_error
+  call puts
+
+  mov ah, 0
+  int 16h       ; wait for keypress
+  jmp 0FFFFh:0
+
+
+msg_disk_loaded: db 'Loaded data from disc', ENDL, 0
+msg_disk_error: db 'Read from disc failed', ENDL, 0
+
 
 times 510-($-$$) db 0
 dw 0AA55h

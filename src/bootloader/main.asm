@@ -34,9 +34,6 @@ ebr_system_id:              db 'FAT12   '       ; 8 bytes
 
 
 start:
-  jmp main
-
-main:
   ; setup data segments
   mov ax, 0
   mov ds, ax
@@ -45,6 +42,13 @@ main:
   ; setup stack
   mov ss, ax
   mov sp, 0x7C00
+
+  ; some BIOSes might start us at 07C0:0000
+  ; ensure we are at 0000:7C00
+  push es
+  push word .after
+  retf
+.after:
 
   ; read from disk
   ; BIOS should set DL to drive number

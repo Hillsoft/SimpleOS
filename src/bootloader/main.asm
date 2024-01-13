@@ -54,15 +54,123 @@ start:
   ; BIOS should set DL to drive number
   mov [ebr_drive_number], dl
 
-  mov ax, 1       ; LBA = 1
-  mov cl, 1       ; sector count
-  mov bx, 0x7E00  ; address to store result
-  call disk_read
-
-  mov si, msg_disk_loaded
+  mov si, msg_loading
   call puts
 
-  hlt
+  ; read FAT root directory
+
+  ; compute LBA
+  mov ax, [bdb_sectors_per_fat]
+  mov bl, [bdb_fat_count]
+  xor bh, bh
+  mul bx ; ax = fats * sectors_per_fat
+  add ax, [bdb_reserved_sectors] ; ax = LBA
+  push ax
+
+  ; compute size
+  mov ax, [bdb_dir_entries_count]
+  shl ax, 5 ; ax *= 32
+  xor dx, dx
+  div word [bdb_bytes_per_sector]
+
+  test dx, dx ; if dx != 0, add 1
+  jz .root_dir_after
+  inc ax
+
+.root_dir_after:
+  mov cl, al                  ; cl = number of sectors to read
+  pop ax                      ; ax = LBA
+  mov dl, [ebr_drive_number]  ; dl = drive number
+  mov bx, buffer              ; es:bx = buffer
+  call disk_read
+
+  ; search for kernel.bin
+  ; bx is loop counter
+  xor bx, bx
+  mov di, buffer
+
+.search_kernel:
+  mov si, file_kernel_bin
+  mov cx, 11
+  push di
+  repe cmpsb
+  pop di
+  je .found_kernel
+
+  add di, 32 ; point to next directory entry
+  inc bx
+  cmp bx, [bdb_dir_entries_count]
+  jl .search_kernel
+
+  mov si, msg_kernel_not_found
+  call puts
+  jmp .halt
+
+.found_kernel:
+  ; di points to kernel directory entry
+  mov ax, [di+26]   ; first cluster
+  mov [kernel_cluster], ax
+
+  ; load FAT
+  mov ax, [bdb_reserved_sectors]
+  mov bx, buffer
+  mov cl, [bdb_sectors_per_fat]
+  mov dl, [ebr_drive_number]
+  call disk_read
+
+  ; read kernel and process FAT chain
+  mov bx, KERNEL_LOAD_SEGMENT
+  mov es, bx
+  mov bx, KERNEL_LOAD_OFFSET
+
+.load_kernel_loop:
+  ; Read next cluster
+  mov ax, [kernel_cluster]
+  add ax, 31  ; hard coded value based on floppy format assumptions
+  mov cl, 1
+  mov dl, [ebr_drive_number]
+  call disk_read
+
+  add bx, [bdb_bytes_per_sector]
+
+  ; compute location of next cluster
+  mov ax, [kernel_cluster]
+  mov cx, 3
+  mul cx
+  mov cx, 2
+  div cx    ; ax = fatIndex
+
+  mov si, buffer
+  add si, ax
+  mov ax, [ds:si]   ; read entry from fat table
+
+  or dx, dx
+  jz .even
+
+.odd:
+  shr ax, 4
+  jmp .next_cluster_after
+
+.even:
+  and ax, 0x0FFF
+
+.next_cluster_after:
+  cmp ax, 0x0FF8
+  jae .read_finish
+
+  mov [kernel_cluster], ax
+  jmp .load_kernel_loop
+
+.read_finish:
+  ; jump to the loaded kernel
+  mov dl, [ebr_drive_number]
+
+  ; set segment registers
+  mov ax, KERNEL_LOAD_SEGMENT
+  mov ds, ax
+  mov es, ax
+
+  jmp KERNEL_LOAD_SEGMENT:KERNEL_LOAD_OFFSET
 
 .halt:
   cli
@@ -196,9 +304,18 @@ disk_error:
   jmp 0FFFFh:0
 
 
-msg_disk_loaded: db 'Loaded data from disc', ENDL, 0
+msg_loading: db 'Loading...', ENDL, 0
+file_kernel_bin: db 'KERNEL  BIN'
 msg_disk_error: db 'Read from disc failed', ENDL, 0
+msg_kernel_not_found: db 'Kernel not found', ENDL, 0
+kernel_cluster: dw 0
+
+
+KERNEL_LOAD_SEGMENT   equ 0x2000
+KERNEL_LOAD_OFFSET    equ 0x0
 
 
 times 510-($-$$) db 0
 dw 0AA55h
+
+buffer:

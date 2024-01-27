@@ -28,11 +28,12 @@ entry:
   add sp, 2
 
   push 230
+  push 230
   push test_string
   push 'o'
   push msg_printf_test
   call printf
-  add sp, 8
+  add sp, 10
 
 .halt:
   cli
@@ -175,6 +176,7 @@ putuint:
 ;   %c - prints char
 ;   %s - prints string
 ;   %u - prints unsigned decimal int
+;   %X - prints unsigned hexadecimal (capitals)
 printf:
   ; new call frame
   push bp
@@ -223,6 +225,10 @@ printf:
   cmp al, cl
   je .uint
 
+  mov cl, 'X'
+  cmp al, cl
+  je .uhexcaps
+
   jmp .error.badspecifier
 
 .percent:
@@ -261,6 +267,16 @@ printf:
   add sp, 4
   jmp .mainloop
 
+.uhexcaps:
+  mov dx, [di]
+  add di, 2
+
+  push 16
+  push dx
+  call putuint
+  add sp, 4
+  jmp .mainloop
+
 .rawchar:
   push 0
   push ax
@@ -290,7 +306,8 @@ msg_printf_bad_specifier: db '<bad specifier>', 0
 msg_printf_test: db 'percent: %%', ENDL
                  db 'char: %c', ENDL
                  db 'string: %s', ENDL
-                 db 'uint: %u', ENDL, 0
+                 db 'uint: %u', ENDL
+                 db 'hex: %X', ENDL, 0
 
 test_string: db 'test', 0
 

@@ -108,6 +108,7 @@ putuint:
   push bp
   mov bp, sp
 
+  push di
   push bx
 
   ; [bp + 0] - old bp
@@ -121,7 +122,7 @@ putuint:
   jz .zero
 
   ; we'll use the stack to store digits
-  xor bx, bx ; number of digits
+  xor di, di ; number of digits
 
 .digitpushloop:
   mov cx, 10
@@ -129,23 +130,23 @@ putuint:
   div word cx ; ax = new i
               ; dx = current digit
   push dx
-  inc bx
+  inc di
 
   or ax, ax
   jnz .digitpushloop
 
 .digitprintloop:
-  pop dx
-  dec bx
+  pop bx
+  dec di
 
-  add dx, '0'
+  mov bx, [bx + digit_map]
 
   push 0
-  push dx
+  push bx
   call putc
   add sp, 4
 
-  or bx, bx
+  or di, di
   jnz .digitprintloop
 
   jmp .finish
@@ -159,6 +160,7 @@ putuint:
 .finish:
   ; return
   pop bx
+  pop di
 
   mov sp, bp
   pop bp
@@ -287,3 +289,5 @@ msg_printf_test: db 'percent: %%', ENDL
                  db 'uint: %u', ENDL, 0
 
 test_string: db 'test', 0
+
+digit_map: db '0123456789ABCDEF'

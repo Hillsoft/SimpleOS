@@ -67,12 +67,13 @@ puts:
   push bx
   push si
 
-  mov ah, 0Eh
-  xor bx, bx
-
   ; [bp + 0] - old bp
   ; [bp + 2] - return address
   ; [bp + 4] - char pointer
+
+  mov ah, 0Eh
+  xor bx, bx
+
   mov si, [bp + 4]
 .puts.loop:
   lodsb

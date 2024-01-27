@@ -102,7 +102,9 @@ puts:
   pop bp
   ret
 
-; void putint(uint16_t i)
+; void putint(uint16_t i, uint16_t base)
+; requires:
+;   2 <= base <= 16
 putuint:
   ; new call frame
   push bp
@@ -114,8 +116,10 @@ putuint:
   ; [bp + 0] - old bp
   ; [bp + 2] - return address
   ; [bp + 4] - i
+  ; [bp + 6] - base
 
   mov ax, [bp + 4] ; i
+  mov cx, [bp + 6] ; base
 
   ; special handling for zero
   or ax, ax
@@ -125,7 +129,6 @@ putuint:
   xor di, di ; number of digits
 
 .digitpushloop:
-  mov cx, 10
   xor dx, dx
   div word cx ; ax = new i
               ; dx = current digit
@@ -252,9 +255,10 @@ printf:
   mov dx, [di]
   add di, 2
 
+  push 10
   push dx
   call putuint
-  add sp, 2
+  add sp, 4
   jmp .mainloop
 
 .rawchar:

@@ -27,10 +27,11 @@ entry:
   call puts
   add sp, 2
 
+  push test_string
   push 'o'
   push msg_printf_test
   call printf
-  add sp, 4
+  add sp, 6
 
 .halt:
   cli
@@ -104,6 +105,7 @@ puts:
 ; supported specifiers:
 ;   %% - prints '%'
 ;   %c - prints char
+;   %s - prints string
 printf:
   ; new call frame
   push bp
@@ -144,6 +146,10 @@ printf:
   cmp al, cl
   je .char
 
+  mov cl, 's'
+  cmp al, cl
+  je .string
+
   jmp .error.badspecifier
 
 .percent:
@@ -161,6 +167,15 @@ printf:
   push dx
   call putc
   add sp, 4
+  jmp .mainloop
+
+.string:
+  mov dx, [di]
+  add di, 2
+
+  push dx
+  call puts
+  add sp, 2
   jmp .mainloop
 
 .rawchar:
@@ -190,4 +205,7 @@ msg_init: db 'Stage 2 started...', ENDL, 0
 msg_printf_bad_specifier: db '<bad specifier>', 0
 
 msg_printf_test: db 'percent: %%', ENDL
-                 db 'char: %c', ENDL, 0
+                 db 'char: %c', ENDL
+                 db 'string: %s', ENDL, 0
+
+test_string: db 'test', 0

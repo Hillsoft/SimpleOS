@@ -27,6 +27,10 @@ entry:
   call puts
   add sp, 2
 
+  push msg_printf_test
+  call printf
+  add sp, 2
+
 .halt:
   cli
   hlt
@@ -95,4 +99,64 @@ puts:
   pop bp
   ret
 
+; void printf(const char* fmt, ...)
+printf:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push si
+  push di
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - fmt
+  ; ... - vargs
+  mov di, bp
+  add di, 6
+
+  mov si, [bp + 4]
+
+.mainloop:
+  lodsb
+  or al, al
+  jz .strend
+
+  mov cl, '%'
+  cmp al, cl
+  jne .rawchar
+
+  ; we have a format specifier
+  lodsb
+  or al, al
+  jz .strend
+
+  jmp .error.badspecifier
+
+.rawchar:
+  push 0
+  push ax
+  call putc
+  add sp, 4
+  jmp .mainloop
+
+.error.badspecifier:
+  push msg_printf_bad_specifier
+  call puts
+  add sp, 2
+  jmp .mainloop
+
+.strend:
+  ; return
+  pop di
+  pop si
+
+  mov sp, bp
+  pop bp
+  ret
+
 msg_init: db 'Stage 2 started...', ENDL, 0
+
+msg_printf_bad_specifier: db '<bad specifier>', 0
+
+msg_printf_test: db 'test: %', ENDL, 0

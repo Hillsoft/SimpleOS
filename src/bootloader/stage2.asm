@@ -27,11 +27,12 @@ entry:
   call puts
   add sp, 2
 
+  push 230
   push test_string
   push 'o'
   push msg_printf_test
   call printf
-  add sp, 6
+  add sp, 8
 
 .halt:
   cli
@@ -168,6 +169,7 @@ putuint:
 ;   %% - prints '%'
 ;   %c - prints char
 ;   %s - prints string
+;   %u - prints unsigned decimal int
 printf:
   ; new call frame
   push bp
@@ -212,6 +214,10 @@ printf:
   cmp al, cl
   je .string
 
+  mov cl, 'u'
+  cmp al, cl
+  je .uint
+
   jmp .error.badspecifier
 
 .percent:
@@ -237,6 +243,15 @@ printf:
 
   push dx
   call puts
+  add sp, 2
+  jmp .mainloop
+
+.uint:
+  mov dx, [di]
+  add di, 2
+
+  push dx
+  call putuint
   add sp, 2
   jmp .mainloop
 
@@ -268,6 +283,7 @@ msg_printf_bad_specifier: db '<bad specifier>', 0
 
 msg_printf_test: db 'percent: %%', ENDL
                  db 'char: %c', ENDL
-                 db 'string: %s', ENDL, 0
+                 db 'string: %s', ENDL
+                 db 'uint: %u', ENDL, 0
 
 test_string: db 'test', 0

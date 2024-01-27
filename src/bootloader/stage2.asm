@@ -100,6 +100,8 @@ puts:
   ret
 
 ; void printf(const char* fmt, ...)
+; supported specifiers:
+;   %% - prints '%'
 printf:
   ; new call frame
   push bp
@@ -131,7 +133,19 @@ printf:
   or al, al
   jz .strend
 
+  ; test possibilities
+  mov cl, '%'
+  cmp al, cl
+  je .percent
+
   jmp .error.badspecifier
+
+.percent:
+  push 0
+  push '%'
+  call putc
+  add sp, 4
+  jmp .mainloop
 
 .rawchar:
   push 0
@@ -159,4 +173,4 @@ msg_init: db 'Stage 2 started...', ENDL, 0
 
 msg_printf_bad_specifier: db '<bad specifier>', 0
 
-msg_printf_test: db 'test: %', ENDL, 0
+msg_printf_test: db 'percent: %%', ENDL, 0

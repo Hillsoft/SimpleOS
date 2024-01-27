@@ -101,6 +101,68 @@ puts:
   pop bp
   ret
 
+; void putint(uint16_t i)
+putuint:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push bx
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - i
+
+  mov ax, [bp + 4] ; i
+
+  ; special handling for zero
+  or ax, ax
+  jz .zero
+
+  ; we'll use the stack to store digits
+  xor bx, bx ; number of digits
+
+.digitpushloop:
+  mov cx, 10
+  xor dx, dx
+  div word cx ; ax = new i
+              ; dx = current digit
+  push dx
+  inc bx
+
+  or ax, ax
+  jnz .digitpushloop
+
+.digitprintloop:
+  pop dx
+  dec bx
+
+  add dx, '0'
+
+  push 0
+  push dx
+  call putc
+  add sp, 4
+
+  or bx, bx
+  jnz .digitprintloop
+
+  jmp .finish
+
+.zero:
+  push 0
+  push '0'
+  call putc
+  add sp, 4
+
+.finish:
+  ; return
+  pop bx
+
+  mov sp, bp
+  pop bp
+  ret
+
 ; void printf(const char* fmt, ...)
 ; supported specifiers:
 ;   %% - prints '%'

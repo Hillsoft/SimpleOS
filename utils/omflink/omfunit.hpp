@@ -41,11 +41,16 @@ struct ExportedName {
   uint16_t offset;
 };
 
+struct ImportedName {
+  std::string_view name;
+};
+
 struct TranslationUnit {
   std::string_view name;
   std::vector<std::string_view> namesList;
   std::vector<SegmentDefinition> segments;
   std::vector<ExportedName> exports;
+  std::vector<ImportedName> imports;
 };
 
 TranslationUnit decodeUnit(std::span<const uint8_t> fileContents);

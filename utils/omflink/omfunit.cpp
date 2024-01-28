@@ -42,6 +42,35 @@ CommentRecord parseCommentRecord(const RawRecord& record) {
   return {};
 }
 
+struct ImportRecord {
+  std::vector<ImportedName> importedNames;
+};
+
+ImportRecord parseImportRecord(const RawRecord& record) {
+  assert(record.recordIdentifier == 0x8c);
+
+  std::vector<ImportedName> names;
+
+  std::span<const uint8_t> contents = record.recordContents;
+  while (contents.size() > 0) {
+    uint8_t nameLength = contents[0];
+    if (contents.size() < nameLength + 2) {
+      throw std::runtime_error{"Incomplete import"};
+    }
+
+    std::string_view name{
+      reinterpret_cast<const char*>(contents.data() + 1),
+      nameLength
+    };
+
+    names.emplace_back(name);
+
+    contents = contents.subspan(nameLength + 2);
+  }
+
+  return ImportRecord{std::move(names)};
+}
+
 struct ExportRecord {
   std::vector<ExportedName> exportedNames;
 };
@@ -213,6 +242,17 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
         // COMENT
         CommentRecord record = parseCommentRecord(currentRecord);
         // nothing to do with a comment
+        break;
+      }
+
+     case 0x8c:
+      {
+        // EXTDEF
+        ImportRecord record = parseImportRecord(currentRecord);
+        result.imports.reserve(result.imports.size() + record.importedNames.size());
+        for (const auto& n : record.importedNames) {
+          result.imports.emplace_back(std::move(n));
+        }
         break;
       }
 

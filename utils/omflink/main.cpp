@@ -47,6 +47,12 @@ int main(int argc, char** argv) {
   for (const auto& symbol : unit.exports) {
     std::cout << "  " << symbol.name << std::endl;
   }
+  std::cout << std::endl;
+
+  std::cout << "Unit requires symbols:" << std::endl;
+  for (const auto& symbol : unit.imports) {
+    std::cout << "  " << symbol.name << std::endl;
+  }
 
   return 0;
 }

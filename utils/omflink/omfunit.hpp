@@ -21,8 +21,18 @@ struct SegmentDefinition {
     COMMON=6,
   };
 
+  enum class BitField: uint8_t {
+    BITS_16 = 0,
+    BITS_32 = 1,
+  };
+
   Alignment alignment;
   Combination combination;
+  BitField bitField;
+
+  uint32_t segmentLength;
+  std::string_view segmentName;
+  std::string_view className;
 };
 
 struct TranslationUnit {

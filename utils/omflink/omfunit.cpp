@@ -8,6 +8,14 @@ namespace omf {
 
 namespace {
 
+std::string_view lookupName(const TranslationUnit& unit, uint8_t nameIndex) {
+  if (nameIndex == 0 || nameIndex > unit.namesList.size()) {
+    throw std::runtime_error{"Out of bounds name index"};
+  }
+
+  return unit.namesList[nameIndex - 1];
+}
+
 struct RecordHeader {
   std::string_view unitName;
 };
@@ -63,6 +71,71 @@ NamesRecord parseNamesRecord(const RawRecord& record) {
   };
 }
 
+struct SegmentRecord {
+  SegmentDefinition::Alignment alignment;
+  SegmentDefinition::Combination combination;
+  SegmentDefinition::BitField bitField;
+
+  uint32_t segmentLength;
+  uint8_t segmentNameIndex;
+  uint8_t classNameIndex;
+  uint8_t overlayNameIndex;
+};
+
+SegmentRecord parseSegmentRecord(const RawRecord& record) {
+  assert(record.recordIdentifier == 0x98);
+
+  if (record.recordLength != 7) {
+    throw std::runtime_error{"Incorrectly formatted SEGDEF"};
+  }
+
+  uint8_t attributes = record.recordContents[0];
+  uint32_t segmentLength = *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1);
+  uint8_t segmentNameIndex = record.recordContents[3];
+  uint8_t classNameIndex = record.recordContents[4];
+  uint8_t overlayNameIndex = record.recordContents[5];
+
+  // The high 3 bits
+  SegmentDefinition::Alignment alignment = static_cast<SegmentDefinition::Alignment>(attributes >> 5);
+  if (alignment != SegmentDefinition::Alignment::ABSOLUTE
+      && alignment != SegmentDefinition::Alignment::RELOCATABLE_BYTE_ALIGNED
+      && alignment != SegmentDefinition::Alignment::RELOCATABLE_2BYTE_ALIGNED
+      && alignment != SegmentDefinition::Alignment::RELOCATABLE_16BYTE_ALIGNED) {
+    throw std::runtime_error{"Invalid segment alignment"};
+  }
+
+  SegmentDefinition::Combination combination = static_cast<SegmentDefinition::Combination>((attributes >> 2) & 0b111);
+  if (combination != SegmentDefinition::Combination::PRIVATE
+      && combination != SegmentDefinition::Combination::PUBLIC
+      && combination != SegmentDefinition::Combination::STACK
+      && combination != SegmentDefinition::Combination::COMMON) {
+    throw std::runtime_error{"Invalid segment combination"};
+  }
+
+  bool big = (attributes & 0b10) > 0;
+
+  SegmentDefinition::BitField bitField = (attributes & 0b1) > 0
+      ? SegmentDefinition::BitField::BITS_32
+      : SegmentDefinition::BitField::BITS_16;
+
+  if (big) {
+    if (segmentLength != 0) {
+      throw std::runtime_error{"Bad segment length"};
+    }
+    segmentLength = 64 * 1024; // 64kb
+  }
+
+  return SegmentRecord{
+    .alignment = alignment,
+    .combination = combination,
+    .bitField = bitField,
+    .segmentLength = segmentLength,
+    .segmentNameIndex = segmentNameIndex,
+    .classNameIndex = classNameIndex,
+    .overlayNameIndex = overlayNameIndex,
+  };
+}
+
 } // namespace
 
 TranslationUnit decodeUnit(std::span<const uint8_t> fileContents) {
@@ -109,6 +182,21 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
         for (const auto& n : record.names) {
           result.namesList.emplace_back(std::move(n));
         }
+        break;
+      }
+
+     case 0x98:
+      {
+        // SEGDEF
+        SegmentRecord record = parseSegmentRecord(currentRecord);
+        result.segments.push_back(SegmentDefinition{
+          .alignment = record.alignment,
+          .combination = record.combination,
+          .bitField = record.bitField,
+          .segmentLength = record.segmentLength,
+          .segmentName = lookupName(result, record.segmentNameIndex),
+          .className = lookupName(result, record.classNameIndex),
+        });
         break;
       }
 

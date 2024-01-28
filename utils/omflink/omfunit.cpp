@@ -54,7 +54,7 @@ ImportRecord parseImportRecord(const RawRecord& record) {
   std::span<const uint8_t> contents = record.recordContents;
   while (contents.size() > 0) {
     uint8_t nameLength = contents[0];
-    if (contents.size() < nameLength + 2) {
+    if (contents.size() < nameLength + 2u) {
       throw std::runtime_error{"Incomplete import"};
     }
 
@@ -90,7 +90,7 @@ ExportRecord parseExportRecord(const RawRecord& record) {
   std::span<const uint8_t> contents = record.recordContents.subspan(segmentIndex == 0 ? 4 : 2);
   while (contents.size() > 0) {
     uint8_t nameLength = contents[0];
-    if (contents.size() < nameLength + 4) {
+    if (contents.size() < nameLength + 4u) {
       throw std::runtime_error{"Incomplete export"};
     }
 
@@ -126,7 +126,7 @@ NamesRecord parseNamesRecord(const RawRecord& record) {
   while (contents.size() > 0) {
     uint8_t nameLength = contents[0];
 
-    if (contents.size() < 1 + nameLength) {
+    if (contents.size() < 1u + nameLength) {
       throw std::runtime_error{"Incomplete name"};
     }
 

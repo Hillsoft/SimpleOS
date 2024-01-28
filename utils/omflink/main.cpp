@@ -23,12 +23,12 @@ int main(int argc, char** argv) {
   file.seekg(0, std::ios::beg);
 
   const std::vector<uint8_t> buffer = [&]() {
-    std::vector<uint8_t> buffer;
-    buffer.resize(fileSize);
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)) {
+    std::vector<uint8_t> initBuffer;
+    initBuffer.resize(static_cast<std::size_t>(fileSize));
+    if (!file.read(reinterpret_cast<char*>(initBuffer.data()), fileSize)) {
       throw std::runtime_error{"Cannot read file"};
     }
-    return buffer;
+    return initBuffer;
   }();
 
   std::cout << "Read " << fileSize << " bytes" << std::endl;
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   std::cout << "Extracted " << rawRecords.size() << " records" << std::endl;
 
   for (const auto& record : rawRecords) {
-    std::cout << "Record identifier: " << std::hex << (int)record.recordIdentifier << std::dec << std::endl;
+    std::cout << "Record identifier: " << std::hex << static_cast<int>(record.recordIdentifier) << std::dec << std::endl;
   }
 
   TranslationUnit unit = decodeUnit(rawRecords);

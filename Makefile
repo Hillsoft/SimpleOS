@@ -31,10 +31,11 @@ build/utils/fat.exe: utils/fat/fat.cpp
 	@mkdir -p build/utils
 	g++ -g utils/fat/fat.cpp -o build/utils/fat.exe -std=c++20 -static -static-libgcc -static-libstdc++
 
-omflink:
-	@mkdir -p build/omflink
-	$(MAKE) -C utils/omflink BUILD_DIR="../../$(BUILD_DIR)/omflink" all
+BUILD_DIR=build/omflink
+SRC_DIR=utils/omflink
+TOOLS_DIR=tools
+include utils/omflink/Makefile
 
 clean:
 	rm build -f -R
-	$(MAKE) -C utils/omflink BUILD_DIR="../../$(BUILD_DIR)/omflink" clean
+	rm tools/omflink.exe -f

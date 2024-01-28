@@ -43,7 +43,7 @@ std::vector<RawRecord> extractRawRecords(std::span<const uint8_t> fileContents) 
     if (currentRecord.recordLength > 1021) {
       throw std::runtime_error{"Oversized record"};
     }
-    if (fileContents.size() < currentRecord.recordLength + 1) {
+    if (fileContents.size() < currentRecord.recordLength + 1u) {
       throw std::runtime_error{"Incomplete record"};
     }
 

@@ -1,20 +1,22 @@
 bootable_floppy: build/main.img
 
-build/main.img: build/bootloader/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2.bin
-	"./tools/fat_imgen" -c -F -f build/main.img -s build/bootloader/main.bin
+build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2/main.bin
+	"./tools/fat_imgen" -c -F -f build/main.img -s build/bootloader/boot/main.bin
 	"./tools/fat_imgen" -m -f build/main.img -i res/test.txt -n test.txt
-	"./tools/fat_imgen" -m -f build/main.img -i build/bootloader/stage2.bin -n stage2.bin
+	"./tools/fat_imgen" -m -f build/main.img -i build/bootloader/stage2/main.bin -n stage2.bin
 	"./tools/fat_imgen" -m -f build/main.img -i build/kernel/main.bin -n kernel.bin
 
-build/bootloader/main.bin: src/bootloader/main.asm
+build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
 	@mkdir -p build
 	@mkdir -p build/bootloader
-	nasm src/bootloader/main.asm -f bin -o build/bootloader/main.bin
+	@mkdir -p build/bootloader/boot
+	nasm src/bootloader/boot/main.asm -f bin -o build/bootloader/boot/main.bin
 
-build/bootloader/stage2.bin: src/bootloader/stage2.asm
+build/bootloader/stage2/main.bin: src/bootloader/stage2/main.asm
 	@mkdir -p build
 	@mkdir -p build/bootloader
-	nasm src/bootloader/stage2.asm -f bin -o build/bootloader/stage2.bin
+	@mkdir -p build/bootloader/stage2
+	nasm src/bootloader/stage2/main.asm -f bin -o build/bootloader/stage2/main.bin
 
 build/kernel/main.bin: src/kernel/main.asm
 	@mkdir -p build

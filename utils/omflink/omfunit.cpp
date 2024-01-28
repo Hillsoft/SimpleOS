@@ -16,6 +16,22 @@ std::string_view lookupName(const TranslationUnit& unit, uint8_t nameIndex) {
   return unit.namesList[nameIndex - 1];
 }
 
+SegmentDefinition& lookupSegment(TranslationUnit& unit, uint8_t segmentIndex) {
+  if (segmentIndex == 0 || segmentIndex > unit.segments.size()) {
+    throw std::runtime_error{"Out of bounds segment index"};
+  }
+
+  return unit.segments[segmentIndex - 1];
+}
+
+const SegmentDefinition& lookupSegment(const TranslationUnit& unit, uint8_t segmentIndex) {
+  if (segmentIndex == 0 || segmentIndex > unit.segments.size()) {
+    throw std::runtime_error{"Out of bounds segment index"};
+  }
+
+  return unit.segments[segmentIndex - 1];
+}
+
 struct RecordHeader {
   std::string_view unitName;
 };
@@ -247,6 +263,8 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
   RecordHeader header = parseRecordHeader(records[0]);
   result.name = header.unitName;
 
+  LogicalData* lastDataBlock = nullptr;
+
   for (auto it = records.begin() + 1; it != records.end(); it++) {
     const auto& currentRecord = *it;
 
@@ -321,11 +339,8 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
       {
         // LEDATA
         EnumeratedDataRecord record = parseEnumeratedDataRecord(currentRecord);
-        // validate segment
-        if (record.data.segmentIndex == 0 || record.data.segmentIndex > result.segments.size()) {
-          throw std::runtime_error{"Invalid segment index in enumerated data"};
-        }
-        result.logicalData.push_back(std::move(record.data));
+        SegmentDefinition& segment = lookupSegment(result, record.data.segmentIndex);
+        lastDataBlock = &segment.dataBlocks.emplace_back(std::move(record.data));
         break;
       }
 

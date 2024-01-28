@@ -207,6 +207,26 @@ SegmentRecord parseSegmentRecord(const RawRecord& record) {
   };
 }
 
+struct EnumeratedDataRecord {
+  LogicalData data;
+};
+
+EnumeratedDataRecord parseEnumeratedDataRecord(const RawRecord& record) {
+  assert(record.recordIdentifier == 0xa0);
+
+  if (record.recordLength < 4) {
+    throw std::runtime_error{"Incorrectly formatted LEDATA"};
+  }
+
+  return EnumeratedDataRecord{
+    .data = LogicalData{
+      .segmentIndex = record.recordContents[0],
+      .dataOffset = *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1),
+      .data = record.recordContents.subspan(3)
+    }
+  };
+}
+
 } // namespace
 
 TranslationUnit decodeUnit(std::span<const uint8_t> fileContents) {
@@ -294,6 +314,18 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
           .segmentName = lookupName(result, record.segmentNameIndex),
           .className = lookupName(result, record.classNameIndex),
         });
+        break;
+      }
+
+     case 0xa0:
+      {
+        // LEDATA
+        EnumeratedDataRecord record = parseEnumeratedDataRecord(currentRecord);
+        // validate segment
+        if (record.data.segmentIndex == 0 || record.data.segmentIndex > result.segments.size()) {
+          throw std::runtime_error{"Invalid segment index in enumerated data"};
+        }
+        result.logicalData.push_back(std::move(record.data));
         break;
       }
 

@@ -45,12 +45,19 @@ struct ImportedName {
   std::string_view name;
 };
 
+struct LogicalData {
+  uint8_t segmentIndex;
+  uint16_t dataOffset;
+  std::span<const uint8_t> data;
+};
+
 struct TranslationUnit {
   std::string_view name;
   std::vector<std::string_view> namesList;
   std::vector<SegmentDefinition> segments;
   std::vector<ExportedName> exports;
   std::vector<ImportedName> imports;
+  std::vector<LogicalData> logicalData;
 };
 
 TranslationUnit decodeUnit(std::span<const uint8_t> fileContents);

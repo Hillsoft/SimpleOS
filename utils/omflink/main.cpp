@@ -43,5 +43,10 @@ int main(int argc, char** argv) {
 
   TranslationUnit unit = decodeUnit(rawRecords);
 
+  std::cout << "Unit provides symbols:" << std::endl;
+  for (const auto& symbol : unit.exports) {
+    std::cout << "  " << symbol.name << std::endl;
+  }
+
   return 0;
 }

@@ -42,6 +42,48 @@ CommentRecord parseCommentRecord(const RawRecord& record) {
   return {};
 }
 
+struct ExportRecord {
+  std::vector<ExportedName> exportedNames;
+};
+
+ExportRecord parseExportRecord(const RawRecord& record) {
+  assert(record.recordIdentifier == 0x90);
+
+  std::vector<ExportedName> names;
+
+  if (record.recordLength < 2) {
+    throw std::runtime_error{"Incorrectly formatted PUBDEF"};
+  }
+
+  uint8_t groupIndex = record.recordContents[0];
+  uint8_t segmentIndex = record.recordContents[1];
+
+  std::span<const uint8_t> contents = record.recordContents.subspan(segmentIndex == 0 ? 4 : 2);
+  while (contents.size() > 0) {
+    uint8_t nameLength = contents[0];
+    if (contents.size() < nameLength + 4) {
+      throw std::runtime_error{"Incomplete export"};
+    }
+
+    std::string_view name{
+      reinterpret_cast<const char*>(contents.data() + 1),
+      nameLength
+    };
+
+    uint16_t offset = *reinterpret_cast<const uint16_t*>(contents.data() + 1 + nameLength);
+
+    names.push_back(ExportedName{
+      .name = name,
+      .segmentIndex = segmentIndex,
+      .offset = offset,
+    });
+
+    contents = contents.subspan(nameLength + 4);
+  }
+
+  return ExportRecord{std::move(names)};
+}
+
 struct NamesRecord {
   std::vector<std::string_view> names;
 };
@@ -171,6 +213,21 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
         // COMENT
         CommentRecord record = parseCommentRecord(currentRecord);
         // nothing to do with a comment
+        break;
+      }
+
+     case 0x90:
+      {
+        // PUBDEF
+        ExportRecord record = parseExportRecord(currentRecord);
+        result.exports.reserve(result.exports.size() + record.exportedNames.size());
+        for (const auto& n : record.exportedNames) {
+          // validate segment
+          if (n.segmentIndex == 0 || n.segmentIndex > result.segments.size()) {
+            throw std::runtime_error{"Invalid segment index in exported name"};
+          }
+          result.exports.emplace_back(std::move(n));
+        }
         break;
       }
 

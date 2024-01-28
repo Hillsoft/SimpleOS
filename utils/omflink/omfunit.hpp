@@ -35,10 +35,17 @@ struct SegmentDefinition {
   std::string_view className;
 };
 
+struct ExportedName {
+  std::string_view name;
+  uint8_t segmentIndex;
+  uint16_t offset;
+};
+
 struct TranslationUnit {
   std::string_view name;
   std::vector<std::string_view> namesList;
   std::vector<SegmentDefinition> segments;
+  std::vector<ExportedName> exports;
 };
 
 TranslationUnit decodeUnit(std::span<const uint8_t> fileContents);

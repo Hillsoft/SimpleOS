@@ -1,3 +1,5 @@
+BUILD_DIR=build
+
 bootable_floppy: build/main.img
 
 build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2/main.bin
@@ -29,5 +31,10 @@ build/utils/fat.exe: utils/fat/fat.cpp
 	@mkdir -p build/utils
 	g++ -g utils/fat/fat.cpp -o build/utils/fat.exe -std=c++20 -static -static-libgcc -static-libstdc++
 
+omflink:
+	@mkdir -p build/omflink
+	$(MAKE) -C utils/omflink BUILD_DIR="../../$(BUILD_DIR)/omflink" all
+
 clean:
 	rm build -f -R
+	$(MAKE) -C utils/omflink BUILD_DIR="../../$(BUILD_DIR)/omflink" clean

@@ -80,7 +80,7 @@ ExportRecord parseExportRecord(const RawRecord& record) {
 
   std::vector<ExportedName> names;
 
-  if (record.recordLength < 2) {
+  if (record.recordLength < 3) {
     throw std::runtime_error{"Incorrectly formatted PUBDEF"};
   }
 

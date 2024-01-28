@@ -3,7 +3,7 @@ BUILD_DIR?=build
 CXX=g++
 CPPFLAGS=--std=c++20
 
-SRCS=main.cpp omfrecord.cpp
+SRCS=main.cpp omfrecord.cpp omfunit.cpp
 OBJS=$(SRCS:.cpp=.o)
 
 all: omflink

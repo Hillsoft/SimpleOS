@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "omfrecord.hpp"
+#include "omfunit.hpp"
 
 using namespace omf;
 
@@ -39,6 +40,8 @@ int main(int argc, char** argv) {
   for (const auto& record : rawRecords) {
     std::cout << "Record identifier: " << std::hex << (int)record.recordIdentifier << std::dec << std::endl;
   }
+
+  TranslationUnit unit = decodeUnit(rawRecords);
 
   return 0;
 }

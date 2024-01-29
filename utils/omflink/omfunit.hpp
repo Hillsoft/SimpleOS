@@ -2,6 +2,7 @@
 
 #include "omfrecord.hpp"
 
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -111,9 +112,11 @@ struct TranslationUnit {
   std::vector<SegmentDefinition> segments;
   std::vector<ExportedName> exports;
   std::vector<ImportedName> imports;
+
+  std::unique_ptr<const uint8_t[]> rawBytes;
 };
 
-TranslationUnit decodeUnit(std::span<const uint8_t> fileContents);
-TranslationUnit decodeUnit(const std::vector<RawRecord>& records);
+TranslationUnit decodeUnit(std::span<const uint8_t> fileContents, std::unique_ptr<const uint8_t[]> rawBytes);
+TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_ptr<const uint8_t[]> rawBytes);
 
 } // namespace omf

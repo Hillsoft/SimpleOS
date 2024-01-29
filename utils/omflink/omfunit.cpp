@@ -452,16 +452,23 @@ EnumeratedDataRecord parseEnumeratedDataRecord(const RawRecord& record) {
 
 } // namespace
 
-TranslationUnit decodeUnit(std::span<const uint8_t> fileContents) {
-  return decodeUnit(extractRawRecords(fileContents));
+TranslationUnit decodeUnit(std::span<const uint8_t> fileContents, std::unique_ptr<const uint8_t[]> rawBytes) {
+  return decodeUnit(extractRawRecords(fileContents), std::move(rawBytes));
 }
 
-TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
+TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_ptr<const uint8_t[]> rawBytes) {
   if (records.size() == 0) {
     throw std::runtime_error{"No records"};
   }
 
-  TranslationUnit result;
+  TranslationUnit result{
+    .name = "",
+    .namesList = {},
+    .segments = {},
+    .exports = {},
+    .imports = {},
+    .rawBytes = std::move(rawBytes),
+  };
 
   // The first records must be a header
   if (records[0].recordIdentifier != 0x80) {

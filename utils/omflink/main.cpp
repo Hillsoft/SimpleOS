@@ -1,9 +1,7 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 
-#include "omfrecord.hpp"
-#include "omfunit.hpp"
+#include "objloader.hpp"
 
 using namespace omf;
 
@@ -13,45 +11,25 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  std::ifstream file{argv[1], std::ios::in | std::ios::binary | std::ios::ate};
-  if (!file.is_open()) {
-    std::cerr << "Cannot open object file " << argv[1] << std::endl;
-    return -1;
-  }
+  std::vector<TranslationUnit> translationUnits;
+  translationUnits.reserve(static_cast<size_t>(argc - 1));
 
-  std::streamsize fileSize = file.tellg();
-  file.seekg(0, std::ios::beg);
+  for (int i = 1; i < argc; i++) {
+    const TranslationUnit& unit = translationUnits.emplace_back(loadUnitFromFilename(argv[i]));
 
-  const std::vector<uint8_t> buffer = [&]() {
-    std::vector<uint8_t> initBuffer;
-    initBuffer.resize(static_cast<std::size_t>(fileSize));
-    if (!file.read(reinterpret_cast<char*>(initBuffer.data()), fileSize)) {
-      throw std::runtime_error{"Cannot read file"};
+    std::cout << unit.name << std::endl;
+
+    std::cout << "  Unit provides symbols:" << std::endl;
+    for (const auto& symbol : unit.exports) {
+      std::cout << "    " << symbol.name << std::endl;
     }
-    return initBuffer;
-  }();
+    std::cout << std::endl;
 
-  std::cout << "Read " << fileSize << " bytes" << std::endl;
-
-  const std::vector<RawRecord> rawRecords = extractRawRecords(buffer);
-
-  std::cout << "Extracted " << rawRecords.size() << " records" << std::endl;
-
-  for (const auto& record : rawRecords) {
-    std::cout << "Record identifier: " << std::hex << static_cast<int>(record.recordIdentifier) << std::dec << std::endl;
-  }
-
-  TranslationUnit unit = decodeUnit(rawRecords);
-
-  std::cout << "Unit provides symbols:" << std::endl;
-  for (const auto& symbol : unit.exports) {
-    std::cout << "  " << symbol.name << std::endl;
-  }
-  std::cout << std::endl;
-
-  std::cout << "Unit requires symbols:" << std::endl;
-  for (const auto& symbol : unit.imports) {
-    std::cout << "  " << symbol.name << std::endl;
+    std::cout << "  Unit requires symbols:" << std::endl;
+    for (const auto& symbol : unit.imports) {
+      std::cout << "    " << symbol.name << std::endl;
+    }
+    std::cout << std::endl;
   }
 
   return 0;

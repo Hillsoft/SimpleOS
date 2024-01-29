@@ -2,9 +2,61 @@
 
 #include "omfrecord.hpp"
 
+#include <optional>
 #include <string_view>
 
 namespace omf {
+
+struct FrameThread {
+  enum class Method: uint8_t {
+    SEGDEF = 0,
+    GRPDEF = 1,
+    EXTDEF = 2,
+    PREV_SEG = 4,
+    TARG_SEG = 5,
+  };
+
+  Method method;
+  uint8_t index;
+};
+
+struct TargetThread {
+  enum class Method: uint8_t {
+    SEGDEF = 0,
+    GRPDEF = 1,
+    EXTDEF = 2,
+    FRAME_NUMBER = 3,
+    SEGDEF_ZERO_DISPLACE = 4,
+    GRPDEF_ZERO_DISPLACE = 5,
+    EXTDEF_ZERO_DISPLACE = 6,
+  };
+
+  Method method;
+  uint8_t index;
+};
+
+struct FixupData {
+  enum class RelativeTo {
+    SELF_RELATIVE = 0,
+    SEGMENT_RELATIVE = 1,
+  };
+
+  enum class LocationType {
+    LOW_ORDER_BYTE = 0,
+    OFFSET_16BIT = 1,
+    SEGMENT_BASE_16BIT = 2,
+    // There are other valid locations, but we don't support them
+  };
+
+  RelativeTo relativeTo;
+  LocationType locationType;
+  uint16_t dataRecordOffset;
+
+  FrameThread frameThread;
+  TargetThread targetThread;
+
+  uint16_t targetDisplacement;
+};
 
 struct LogicalData {
   uint8_t segmentIndex;

@@ -223,6 +223,213 @@ SegmentRecord parseSegmentRecord(const RawRecord& record) {
   };
 }
 
+bool isValidFrameThreadMethod(FrameThread::Method method) {
+  return method == FrameThread::Method::SEGDEF
+      || method == FrameThread::Method::GRPDEF
+      || method == FrameThread::Method::EXTDEF
+      || method == FrameThread::Method::PREV_SEG
+      || method == FrameThread::Method::TARG_SEG;
+}
+
+bool isValidTargetThreadMethod(TargetThread::Method method) {
+  return method == TargetThread::Method::SEGDEF
+      || method == TargetThread::Method::GRPDEF
+      || method == TargetThread::Method::EXTDEF
+      || method == TargetThread::Method::FRAME_NUMBER
+      || method == TargetThread::Method::SEGDEF_ZERO_DISPLACE
+      || method == TargetThread::Method::GRPDEF_ZERO_DISPLACE
+      || method == TargetThread::Method::EXTDEF_ZERO_DISPLACE;
+}
+
+struct FixupRecord {
+  std::vector<FixupData> fixups;
+};
+
+FixupRecord parseFixupRecord(const RawRecord& record) {
+  std::vector<FixupData> result;
+
+  std::array<std::variant<bool, FrameThread, TargetThread>, 4> threads;
+
+  std::span<const uint8_t> contents = record.recordContents;
+  while (contents.size() > 0) {
+    if ((contents[0] & 0b10000000) == 0) {
+      // Current record is a thread
+      uint8_t headerByte = contents[0];
+      contents = contents.subspan(1);
+
+      bool isFrameThread = (0b1000000 & headerByte) > 0;
+
+      uint8_t tIndex = headerByte & 0b11;
+
+      if (isFrameThread) {
+        FrameThread::Method method = static_cast<FrameThread::Method>((headerByte >> 2) & 0b111);
+
+        if (!isValidFrameThreadMethod(method)) {
+          throw std::runtime_error{"Invalid frame thread method"};
+        }
+
+        uint8_t index = 0;
+        if (method == FrameThread::Method::SEGDEF
+            || method == FrameThread::Method::GRPDEF
+            || method == FrameThread::Method::EXTDEF) {
+          // we need to load index
+          if (contents.size() < 1) {
+            throw std::runtime_error{"Invalid thread format"};
+          }
+          index = contents[0];
+          contents = contents.subspan(1);
+        }
+
+        threads[tIndex] = FrameThread{
+          .method = method,
+          .index = index,
+        };
+      }
+      else {
+        TargetThread::Method method = static_cast<TargetThread::Method>((headerByte >> 2) & 0b111);
+
+        if (!isValidTargetThreadMethod(method)) {
+          throw std::runtime_error{"Invalid target thread method"};
+        }
+
+        uint8_t index = 0;
+        if (method == TargetThread::Method::SEGDEF
+            || method == TargetThread::Method::GRPDEF
+            || method == TargetThread::Method::EXTDEF
+            || method == TargetThread::Method::SEGDEF_ZERO_DISPLACE
+            || method == TargetThread::Method::GRPDEF_ZERO_DISPLACE
+            || method == TargetThread::Method::EXTDEF_ZERO_DISPLACE) {
+          // we need to load index
+          if (contents.size() < 1) {
+            throw std::runtime_error{"Invalid thread format"};
+          }
+          index = contents[0];
+          contents = contents.subspan(1);
+        }
+
+        threads[tIndex] = TargetThread{
+          .method = method,
+          .index = index,
+        };
+      }
+    }
+    else {
+      // Current record is a fixup
+      if (contents.size() < 3) {
+        throw std::runtime_error{"Invalid fixup"};
+      }
+
+      uint8_t headerHi = contents[0];
+      uint8_t headerLo = contents[1];
+
+      FixupData::RelativeTo relativeTo = static_cast<FixupData::RelativeTo>(0b1 & (headerHi >> 6));
+      if (relativeTo != FixupData::RelativeTo::SELF_RELATIVE
+          && relativeTo != FixupData::RelativeTo::SEGMENT_RELATIVE) {
+        throw std::runtime_error{"Invalid fixup relativeness"};
+      }
+
+      FixupData::LocationType location = static_cast<FixupData::LocationType>(0b1111 & (headerHi >> 2));
+      if (location != FixupData::LocationType::LOW_ORDER_BYTE
+          && location != FixupData::LocationType::OFFSET_16BIT
+          && location != FixupData::LocationType::SEGMENT_BASE_16BIT) {
+        throw std::runtime_error{"Invalid fixup location type"};
+      }
+
+      uint16_t dataRecordOffset = (static_cast<uint16_t>(headerHi & 0b11) << 8) | static_cast<uint16_t>(headerLo);
+
+
+      uint8_t fixDataByte = contents[2];
+      bool useFrameThread = (fixDataByte & 0b10000000) > 0;
+      uint8_t frameBits = 0b111 & (fixDataByte >> 4);
+      bool useTargetThread = (fixDataByte & 0b1000) > 0;
+      uint8_t targetBits = 0b111 & fixDataByte;
+      bool targetDisplacementAbsent = (fixDataByte & 0b100) > 0;
+
+      contents = contents.subspan(3);
+
+      FrameThread frame;
+      if (useFrameThread) {
+        uint8_t threadIndex = frameBits & 0b11;
+        if (!std::holds_alternative<FrameThread>(threads[threadIndex])) {
+          throw std::runtime_error{"Fixup referenced bad thread"};
+        }
+
+        frame = std::get<FrameThread>(threads[threadIndex]);
+      }
+      else {
+        FrameThread::Method method = static_cast<FrameThread::Method>(frameBits);
+        if (!isValidFrameThreadMethod(method)) {
+          throw std::runtime_error{"Invalid fixup method"};
+        }
+
+        uint8_t index = 0;
+        if (method == FrameThread::Method::SEGDEF
+            || method == FrameThread::Method::GRPDEF
+            || method == FrameThread::Method::EXTDEF) {
+          if (contents.size() < 1) {
+            throw std::runtime_error{"Invalid fixup"};
+          }
+          index = contents[0];
+          contents = contents.subspan(1);
+        }
+
+        frame = FrameThread{
+          .method = method,
+          .index = index,
+        };
+      }
+
+      TargetThread target;
+      if (useTargetThread) {
+        uint8_t threadIndex = targetBits & 0b11;
+        if (!std::holds_alternative<TargetThread>(threads[threadIndex])) {
+          throw std::runtime_error{"Fixup referenced bad thread"};
+        }
+
+        target = std::get<TargetThread>(threads[threadIndex]);
+      }
+      else {
+        TargetThread::Method method = static_cast<TargetThread::Method>(frameBits & 0b11);
+        if (!isValidTargetThreadMethod(method)) {
+          std::string error = std::format("Invalid fixup method: {}", static_cast<uint16_t>(method));
+          throw std::runtime_error{error};
+        }
+
+        if (contents.size() < 1) {
+          throw std::runtime_error{"Invalid fixup"};
+        }
+        uint8_t index = contents[0];
+        contents = contents.subspan(1);
+
+        target = TargetThread{
+          .method = method,
+          .index = index,
+        };
+      }
+
+      uint16_t targetDisplacement = 0;
+      if (!targetDisplacementAbsent) {
+        if (contents.size() < 2) {
+          throw std::runtime_error{"Invalid fixup"};
+        }
+        targetDisplacement = *reinterpret_cast<const uint16_t*>(contents.data());
+        contents = contents.subspan(2);
+      }
+
+      result.push_back(FixupData{
+        .relativeTo = relativeTo,
+        .locationType = location,
+        .dataRecordOffset = dataRecordOffset,
+        .frameThread = frame,
+        .targetThread = target,
+        .targetDisplacement = targetDisplacement,
+      });
+    }
+  }
+
+  return FixupRecord{std::move(result)};
+}
+
 struct EnumeratedDataRecord {
   LogicalData data;
 };
@@ -283,6 +490,12 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
         break;
       }
 
+     case 0x8a:
+      {
+        // MODEND
+        break;
+      }
+
      case 0x8c:
       {
         // EXTDEF
@@ -332,6 +545,13 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records) {
           .segmentName = lookupName(result, record.segmentNameIndex),
           .className = lookupName(result, record.classNameIndex),
         });
+        break;
+      }
+
+     case 0x9c:
+      {
+        // FIXUPP
+        FixupRecord record = parseFixupRecord(currentRecord);
         break;
       }
 

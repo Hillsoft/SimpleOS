@@ -4,7 +4,9 @@ TOOLS_DIR?=tools
 SRC_DIR?=.
 
 CXX=g++
-CPPFLAGS=--std=c++20 -O2 $(CXX_WARNING_FLAGS)
+CPPFLAGS=--std=c++20 -O2 -s -march=native $(CXX_WARNING_FLAGS)
+
+LDFLAGS=
 
 SRCS=main.cpp nameset.cpp objloader.cpp omfrecord.cpp omfunit.cpp
 OBJS=$(SRCS:.cpp=.o)

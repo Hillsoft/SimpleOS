@@ -37,5 +37,5 @@ int main(int argc, char** argv) {
     nameSet.registerTranslationUnit(unit);
   }
 
-  return 0;
+  return -1;
 }

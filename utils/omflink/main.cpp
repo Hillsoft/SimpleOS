@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 
+#include "nameset.hpp"
 #include "objloader.hpp"
 
 using namespace omf;
@@ -13,6 +14,8 @@ int main(int argc, char** argv) {
 
   std::vector<TranslationUnit> translationUnits;
   translationUnits.reserve(static_cast<size_t>(argc - 1));
+
+  NameSet nameSet;
 
   for (int i = 1; i < argc; i++) {
     const TranslationUnit& unit = translationUnits.emplace_back(loadUnitFromFilename(argv[i]));
@@ -30,6 +33,8 @@ int main(int argc, char** argv) {
       std::cout << "    " << symbol.name << std::endl;
     }
     std::cout << std::endl;
+
+    nameSet.registerTranslationUnit(unit);
   }
 
   return 0;

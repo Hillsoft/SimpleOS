@@ -1,7 +1,10 @@
-BUILD_DIR=build
-TOOLS_DIR=tools
-
 CXX_WARNING_FLAGS=-pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Werror -Wno-unused
+CXX=g++
+CPPFLAGS=--std=c++20 -O2 -s -march=native $(CXX_WARNING_FLAGS)
+
+LDFLAGS=
+
+TOOLS_DIR=tools
 
 all: fat_demo omflink bootable_floppy
 
@@ -19,26 +22,9 @@ build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
 	@mkdir -p build/bootloader/boot
 	nasm src/bootloader/boot/main.asm -f bin -o build/bootloader/boot/main.bin
 
-build/bootloader/stage2/main.o: src/bootloader/stage2/main.asm
-	@mkdir -p build
-	@mkdir -p build/bootloader
-	@mkdir -p build/bootloader/stage2
-	nasm src/bootloader/stage2/main.asm -f obj -o build/bootloader/stage2/main.o
-
-build/bootloader/stage2/printutils.o: src/bootloader/stage2/printutils.asm
-	@mkdir -p build
-	@mkdir -p build/bootloader
-	@mkdir -p build/bootloader/stage2
-	nasm src/bootloader/stage2/printutils.asm -f obj -o build/bootloader/stage2/printutils.o
-
-build/bootloader/stage2/printf.o: src/bootloader/stage2/printf.asm
-	@mkdir -p build
-	@mkdir -p build/bootloader
-	@mkdir -p build/bootloader/stage2
-	nasm src/bootloader/stage2/printf.asm -f obj -o build/bootloader/stage2/printf.o
-
-build/bootloader/stage2/main.bin: tools/omflink.exe build/bootloader/stage2/main.o build/bootloader/stage2/printutils.o build/bootloader/stage2/printf.o
-	tools/omflink.exe build/bootloader/stage2/main.bin build/bootloader/stage2/main.o build/bootloader/stage2/printutils.o build/bootloader/stage2/printf.o
+BUILD_DIR=build/bootloader/stage2
+SRC_DIR=src/bootloader/stage2
+include src/bootloader/stage2/Makefile
 
 build/kernel/main.bin: src/kernel/main.asm
 	@mkdir -p build
@@ -53,7 +39,6 @@ build/utils/fat.exe: utils/fat/fat.cpp
 
 BUILD_DIR=build/omflink
 SRC_DIR=utils/omflink
-TOOLS_DIR=tools
 include utils/omflink/Makefile
 
 clean:

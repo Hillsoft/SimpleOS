@@ -147,7 +147,7 @@ NamesRecord parseNamesRecord(const RawRecord& record) {
     }
 
     names.emplace_back(
-      reinterpret_cast<const char*>(&*(record.recordContents.begin() + 1)),
+      reinterpret_cast<const char*>(contents.data() + 1),
       nameLength);
 
     contents = contents.subspan(1 + nameLength);

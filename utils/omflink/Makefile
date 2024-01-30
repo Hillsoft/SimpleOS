@@ -26,4 +26,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) -MMD -o $@ $< -c $(CFLAGS)
 
--include $(BUILD_DIR)/$(OBJS:.o=.d)
+-include $(addprefix $(BUILD_DIR)/,$(OBJS:.o=.d))

@@ -63,6 +63,8 @@ struct LogicalData {
   uint8_t segmentIndex;
   uint16_t dataOffset;
   std::span<const uint8_t> data;
+
+  std::vector<FixupData> fixups;
 };
 
 struct SegmentDefinition {

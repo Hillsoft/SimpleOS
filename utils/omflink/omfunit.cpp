@@ -445,7 +445,8 @@ EnumeratedDataRecord parseEnumeratedDataRecord(const RawRecord& record) {
     .data = LogicalData{
       .segmentIndex = record.recordContents[0],
       .dataOffset = *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1),
-      .data = record.recordContents.subspan(3)
+      .data = record.recordContents.subspan(3),
+      .fixups = {},
     }
   };
 }
@@ -559,6 +560,43 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
       {
         // FIXUPP
         FixupRecord record = parseFixupRecord(currentRecord);
+        if (lastDataBlock == nullptr) {
+          throw std::runtime_error{"Fixup must occur after data"};
+        }
+        for (const auto& r : record.fixups) {
+          if (r.dataRecordOffset >= lastDataBlock->data.size()) {
+            throw std::runtime_error{"Fixup references out of bounds location"};
+          }
+
+          if (r.frameThread.method == FrameThread::Method::SEGDEF
+              && (r.frameThread.index == 0 || r.frameThread.index > result.segments.size())) {
+            throw std::runtime_error{"Fixup frame referenced non-existing segment"};
+          }
+          if (r.frameThread.method == FrameThread::Method::GRPDEF) {
+            throw std::runtime_error{"Group references not supported"};
+          }
+          if (r.frameThread.method == FrameThread::Method::EXTDEF
+              && (r.frameThread.index == 0 || r.frameThread.index > result.imports.size())) {
+            throw std::runtime_error{"Fixup frame referenced non-existing external symbol"};
+          }
+
+          if ((r.targetThread.method == TargetThread::Method::SEGDEF
+              || r.targetThread.method == TargetThread::Method::SEGDEF_ZERO_DISPLACE)
+              && (r.targetThread.index == 0 || r.targetThread.index > result.segments.size())) {
+            throw std::runtime_error{"Fixup target referenced non-existing segment"};
+          }
+          if (r.targetThread.method == TargetThread::Method::GRPDEF
+              || r.targetThread.method == TargetThread::Method::GRPDEF_ZERO_DISPLACE) {
+            throw std::runtime_error{"Group references not supported"};
+          }
+          if ((r.targetThread.method == TargetThread::Method::EXTDEF
+              || r.targetThread.method == TargetThread::Method::EXTDEF_ZERO_DISPLACE)
+              && (r.targetThread.index == 0 || r.targetThread.index > result.imports.size())) {
+            throw std::runtime_error{"Fixup target referenced non-existing external symbol"};
+          }
+
+          lastDataBlock->fixups.emplace_back(std::move(r));
+        }
         break;
       }
 

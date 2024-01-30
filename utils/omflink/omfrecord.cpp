@@ -1,6 +1,5 @@
 #include "omfrecord.hpp"
 
-#include <iostream>
 #include <stdexcept>
 
 namespace omf {

@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <format>
-#include <iostream>
 
 namespace omf {
 
@@ -67,9 +66,6 @@ void writeTranslationUnit(uint8_t* outBuffer, const NameSet& globalNames, const 
         }
 
         *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress) = targetAddress + sourceData;
-
-        std::cout << "relativeness: " << static_cast<uint16_t>(fixup.relativeTo) << std::endl;
-        std::cout << std::endl;
       }
     }
   }

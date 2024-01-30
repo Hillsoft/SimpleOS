@@ -1,6 +1,5 @@
 #include "objloader.hpp"
 
-#include <iostream>
 #include <format>
 #include <fstream>
 #include <memory>
@@ -21,8 +20,6 @@ TranslationUnit loadUnitFromFilename(const char* filename) {
   if (!file.read(reinterpret_cast<char*>(&buffer[0]), fileSize)) {
     throw std::runtime_error{"Cannot read file"};
   }
-
-  std::cout << "Read " << fileSize << " bytes" << std::endl;
 
   std::span<const uint8_t> bufferRef{&buffer[0], static_cast<std::size_t>(fileSize)};
   return decodeUnit(bufferRef, std::move(buffer));

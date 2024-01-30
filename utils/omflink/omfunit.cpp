@@ -389,7 +389,7 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         target = std::get<TargetThread>(threads[threadIndex]);
       }
       else {
-        TargetThread::Method method = static_cast<TargetThread::Method>(frameBits & 0b11);
+        TargetThread::Method method = static_cast<TargetThread::Method>(targetBits & 0b111);
         if (!isValidTargetThreadMethod(method)) {
           std::string error = std::format("Invalid fixup method: {}", static_cast<uint16_t>(method));
           throw std::runtime_error{error};

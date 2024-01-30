@@ -8,7 +8,7 @@ CPPFLAGS=--std=c++20 -O2 -s -march=native $(CXX_WARNING_FLAGS)
 
 LDFLAGS=
 
-SRCS=layout.cpp main.cpp nameset.cpp objloader.cpp omfrecord.cpp omfunit.cpp
+SRCS=fixup.cpp layout.cpp main.cpp nameset.cpp objloader.cpp omfrecord.cpp omfunit.cpp
 OBJS=$(SRCS:.cpp=.o)
 
 all: omflink

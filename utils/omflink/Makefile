@@ -2,7 +2,7 @@ OMFLINK__BUILD_DIR=$(BUILD_DIR)
 OMFLINK__SRC_DIR=$(SRC_DIR)
 
 
-OMFLINK__SRCS=fixup.cpp layout.cpp main.cpp nameset.cpp objloader.cpp omfrecord.cpp omfunit.cpp
+OMFLINK__SRCS=fixup.cpp layout.cpp linkscript.cpp main.cpp nameset.cpp objloader.cpp omfrecord.cpp omfunit.cpp
 OMFLINK__OBJS=$(OMFLINK__SRCS:.cpp=.o)
 
 all: omflink

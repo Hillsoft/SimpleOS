@@ -1,0 +1,4 @@
+0x0
+.ENTRY
+.TEXT
+.RODATA

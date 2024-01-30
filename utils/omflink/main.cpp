@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 
+#include "layout.hpp"
 #include "nameset.hpp"
 #include "objloader.hpp"
 
@@ -35,6 +36,11 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
 
     nameSet.registerTranslationUnit(unit);
+  }
+
+  std::vector<SegmentDefinition*> segmentLayout = arrangeSegments(translationUnits);
+  for (const auto& s : segmentLayout) {
+    std::cout << "Segment " << s->segmentName << " at 0x" << std::hex << s->baseAddress << std::dec << std::endl;
   }
 
   return -1;

@@ -96,6 +96,8 @@ struct SegmentDefinition {
   std::string_view className;
 
   std::vector<LogicalData> dataBlocks = {};
+
+  uint16_t baseAddress = 0u;
 };
 
 struct ExportedName {

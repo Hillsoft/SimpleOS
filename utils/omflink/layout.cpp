@@ -36,8 +36,8 @@ std::vector<SegmentDefinition*> arrangeSegments(const LinkScript& linkScript, st
     if (std::holds_alternative<LinkScriptAddress>(scriptItem)) {
       uint16_t scriptAddr = std::get<LinkScriptAddress>(scriptItem).address;
 
-      if (scriptAddr > currentIndex) {
-        throw std::runtime_error{std::format("Fixed address {:x} from link script leaves insufficient space for earlier sections", scriptAddr)};
+      if (scriptAddr < currentIndex) {
+        throw std::runtime_error{std::format("Fixed address 0x{:x} from link script leaves insufficient space for earlier sections", scriptAddr)};
       }
 
       currentIndex = scriptAddr;

@@ -15,6 +15,9 @@ extern printf
 extern diskInitialize
 extern FAT_initialize
 
+extern strchr
+extern strcpy
+
 section ENTRY class=CODE
 
 global entry
@@ -77,6 +80,26 @@ entry:
   push msg_printf_test
   call printf
   add sp, 10
+
+  push '/'
+  mov ax, test_strchr
+  push ax
+  call strchr
+  add sp, 4
+
+  push ax
+  call puts
+  add sp, 2
+
+  push test_strchr
+  push test_strcpy
+  call strcpy
+  add sp, 4
+
+  push test_strcpy
+  call puts
+  add sp, 2
+
   jmp .halt
 
 .disk_init_fail:
@@ -119,6 +142,10 @@ test_string: db 'test', 0
 msg_init_disk_fail: db 'Failed to initialise disc', ENDL, 0
 
 msg_fat_init_fail: db 'Failed to initialise FAT filesystem', ENDL, 0
+
+test_strchr: db 'part1/part2', ENDL, 0
+
+test_strcpy: times 100 db 'a', 0
 
 section WDATA class=DATA
 

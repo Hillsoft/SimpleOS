@@ -8,9 +8,9 @@ section TEXT class=CODE
 ;   2: uint16_t cylinders;
 ;   4: uint16_t sectors;
 ;   6: uint16_t heads;
-; }
+; } size=8
 
-extern diskInitialize
+global diskInitialize
 ; bool diskInitialize(DISK* disk, uint8_t driveNumber)
 diskInitialize:
   ; new call frame
@@ -54,7 +54,7 @@ diskInitialize:
   pop bp
   ret
 
-extern diskReadSectors
+global diskReadSectors
 ; bool diskReadSectors(DISK* disk, uint32_t lba, uint8_t sectors, uint8_t far* dataOut)
 diskReadSectors:
   ; new call frame

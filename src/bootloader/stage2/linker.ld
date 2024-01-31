@@ -2,3 +2,4 @@
 .ENTRY
 .TEXT
 .RODATA
+.WDATA

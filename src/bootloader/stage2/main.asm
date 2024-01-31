@@ -12,6 +12,9 @@ bits 16
 extern puts
 extern printf
 
+extern diskInitialize
+extern FAT_initialize
+
 section ENTRY class=CODE
 
 global entry
@@ -28,7 +31,41 @@ entry:
 
   xor dh, dh
 
+  mov di, dx
+
   mov ax, msg_init
+  push ax
+  call puts
+  add sp, 2
+
+  mov ax, msg_init_disk
+  push ax
+  call puts
+  add sp, 2
+
+  mov dx, di
+  xor dh, dh
+  push dx
+  push disk
+  call diskInitialize
+  add sp, 4
+
+  or ax, ax
+  jz .disk_init_fail
+
+  mov ax, msg_init_disk_done
+  push ax
+  call puts
+  add sp, 2
+
+  push disk
+  call FAT_initialize
+  add sp, 2
+
+  or ax, ax
+  jz .fat_init_fail
+
+  mov ax, msg_init_fat_done
   push ax
   call puts
   add sp, 2
@@ -40,6 +77,21 @@ entry:
   push msg_printf_test
   call printf
   add sp, 10
+  jmp .halt
+
+.disk_init_fail:
+  mov ax, msg_init_disk_fail
+  push ax
+  call puts
+  add sp, 2
+  jmp .halt
+
+.fat_init_fail:
+  mov ax, msg_fat_init_fail
+  push ax
+  call puts
+  add sp, 2
+  jmp .halt
 
 .halt:
   cli
@@ -50,6 +102,12 @@ section RODATA class=DATA
 
 msg_init: db 'Stage 2 started...', ENDL, 0
 
+msg_init_disk: db 'Initialising disc', ENDL, 0
+
+msg_init_disk_done: db 'Disc initialised', ENDL, 0
+
+msg_init_fat_done: db 'FAT initialised', ENDL, 0
+
 msg_printf_test: db 'percent: %%', ENDL
                  db 'char: %c', ENDL
                  db 'string: %s', ENDL
@@ -57,3 +115,11 @@ msg_printf_test: db 'percent: %%', ENDL
                  db 'hex: %X', ENDL, 0
 
 test_string: db 'test', 0
+
+msg_init_disk_fail: db 'Failed to initialise disc', ENDL, 0
+
+msg_fat_init_fail: db 'Failed to initialise FAT filesystem', ENDL, 0
+
+section WDATA class=DATA
+
+disk: times 8 db 0

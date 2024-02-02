@@ -9,6 +9,8 @@ bits 16
 ; scratch: eax, ecx, edx
 ; saved: all others
 
+; my extension to cdecl will support 32-bit returns as edx:eax
+
 extern puts
 extern printf
 

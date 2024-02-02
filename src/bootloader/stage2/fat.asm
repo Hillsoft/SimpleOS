@@ -248,6 +248,23 @@ FAT_readRootDirectory:
 
   ;
 
+  ; calculate data_section_lba
+  mov es, [fat_data + 2]
+  mov bx, [fat_data]
+  mov ax, es:[bx + 17] ; dir entries count
+  shl ax, 5 ; *= sizeof(DirectoryEntry)
+
+  xor dx, dx
+  mov cx, es:[bx + 11] ; bytes per sector
+  div word cx
+
+  or dx, dx
+  jz .zero
+  inc ax
+.zero:
+  mov [data_section_lba], ax
+  mov word [data_section_lba + 2], 0
+
   ; big memset to ensure 'isopen' is false for all open files
   push MAX_OPEN_FILES * FILE_DATA_SIZE
   push 0
@@ -322,6 +339,8 @@ section WDATA CLASS=DATA
 ; DISK*
 disk: dw 0
 
-; DirectoryEntry[]
+; FAT_FileData[]
 ; index 0 is always the root directory
 fat_open_files: dw 0000h, 0050h
+
+data_section_lba: dd 0

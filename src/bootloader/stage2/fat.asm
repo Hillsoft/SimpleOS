@@ -131,6 +131,52 @@ FAT_initialize:
 ; FAT_File far* FAT_open(const char* path)
 FAT_open:
 
+; uint32_t FAT_cluster_to_lba(uint32_t cluster)
+FAT_cluster_to_lba:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push bx
+  push es
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - cluster
+
+  ; want to calculate data_section_lba + (cluster - 2) * sectors_per_cluster
+
+  mov bx, [fat_data]
+  mov es, [fat_data + 2]
+
+  xor cx, cx
+  mov cl, es:[bx + 13]
+  sub cl, 2
+
+  mov ax, [bp + 4]
+  mul word cx
+  push ax
+  push dx
+
+  mov ax, [bp + 6]
+  mul word cx
+  pop dx
+  add dx, ax
+  pop ax
+
+  mov cx, [data_section_lba]
+  add ax, cx
+  mov cx, [data_section_lba + 2]
+  adc dx, cx
+
+  ; return
+  pop es
+  pop bx
+
+  mov sp, bp
+  pop bp
+  ret
+
 ; global FAT_read
 ; uint32_t FAT_read(FAT_File far* file, uint32_t byteCount, void* dataOut)
 FAT_read:

@@ -79,6 +79,13 @@ section TEXT class=CODE
 %define FILE_DATA_OFFSET 23
 %define FILE_DATA_SIZE (512 + 23)
 
+%define FAT_ATTRIBUTE_READ_ONLY 01h
+%define FAT_ATTRIBUTE_HIDDEN 02h
+%define FAT_ATTRIBUTE_SYSTEM 04h
+%define FAT_ATTRIBUTE_VOLUME_ID 08h
+%define FAT_ATTRIBUTE_DIRECTORY 10h
+%define FAT_ATTRIBUTE_ARCHIVE 20h
+
 global FAT_initialize
 ; bool FAT_initialize(DISK* disk)
 FAT_initialize:
@@ -127,9 +134,129 @@ FAT_initialize:
   pop bp
   ret
 
-; global FAT_open
+global FAT_open
 ; FAT_File far* FAT_open(const char* path)
 FAT_open:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  ; return
+  mov sp, bp
+  pop bp
+  ret
+
+; FAT_File far* FAT_open_directory_entry(FAT_DirectoryEntry far* entry)
+FAT_open_directory_entry:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push bx
+  push cs
+  push si
+  push di
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - entry
+
+  mov es, [fat_open_files]
+  mov bx, [fat_open_files + 2]
+
+  xor ax, ax
+
+.file_search_loop:
+  mov cx, es:[bx + 12]
+  or cx, cx
+
+  jz .found_file
+
+  add bx, FILE_DATA_SIZE
+  inc ax
+
+  cmp ax, MAX_OPEN_FILES
+  jl .file_search_loop
+
+  push msg_too_many_open_files
+  call puts
+  add sp, 2
+
+  xor ax, ax
+  xor dx, dx
+  jmp .finish
+
+.found_file:
+  ; ax = file handle
+  ; es:bx = file pointer
+
+  mov fs, [bp + 4]
+  mov si, [bp + 6]
+
+  mov word es:[bx], ax ; handle
+
+  xor dx, dx
+  mov di, 1
+  mov cl, fs:[si + 11]
+  and cl, FAT_ATTRIBUTE_DIRECTORY
+  cmovnz dx, di
+  mov word es:[bx + 2], dx ; is directory
+
+  mov word es:[bx + 4], 0 ; position lo
+  mov word es:[bx + 6], 0 ; position hi
+
+  mov ax, fs:[si + 28]
+  mov cx, fs:[si + 30]
+  mov word es:[bx + 8], ax ; size lo
+  mov word es:[bx + 10], cx ; size hi
+
+  mov ax, fs:[si + 26]
+  mov cx, fs:[si + 20]
+  mov word es:[bx + 13], ax ; first cluster lo
+  mov word es:[bx + 15], cx ; first cluster hi
+
+  mov word es:[bx + 15], ax ; current cluster lo
+  mov word es:[bx + 17], cx ; current cluster hi
+
+  mov word es:[bx + 19], 0 ; current sector lo
+  mov word es:[bx + 21], 0 ; current sector hi
+
+  push cx
+  push ax
+  call FAT_cluster_to_lba
+  add sp, 4
+
+  push es
+  add bx, 23
+  push bx
+  push 1
+  push dx
+  push ax
+  mov cx, [disk]
+  push cx
+  call diskReadSectors
+  add sp, 12
+
+  or ax, ax
+  xor dx, dx
+  jz .finish
+
+  mov byte es:[bx + 12], 1 ; is open
+  mov ax, bx
+  mov dx, es
+
+.finish:
+  ; return
+  pop di
+  pop si
+  pop fs
+  pop bx
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret
 
 ; uint32_t FAT_cluster_to_lba(uint32_t cluster)
 FAT_cluster_to_lba:
@@ -376,6 +503,7 @@ section RODATA CLASS=DATA
 
 msg_boot_sector_read_failed: db 'FAT: Read boot sector failed', ENDL, 0
 msg_fat_too_large: db 'FAT: File allocation table too large', ENDL, 0
+msg_too_many_open_files: db 'FAT: Failed to open file, too many already open', ENDL, 0
 
 ; FAT_Data far*
 fat_data: dw 0000h, 0050h

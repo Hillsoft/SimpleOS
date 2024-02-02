@@ -3,14 +3,17 @@ bits 16
 %define ENDL 0x0D, 0x0A
 %define FAT_MEMORY_SIZE_HI 0x0001
 %define FAT_MEMORY_SIZE_LO 0x0000
+%define SECTOR_SIZE 512
+%define MAX_OPEN_FILES 10
 
 extern diskReadSectors
 extern puts
+extern memset_far
 
 section TEXT class=CODE
 
 ; struct FAT_File {
-;   0: uint16_t handle;
+;   0: uint16_t handle; index into openFiles array
 ;   2: bool isDirectory;
 ;   4: uint32_t position;
 ;   8: uint32_t size;
@@ -61,8 +64,20 @@ section TEXT class=CODE
 ;   -- padding up to 512
 ;   512: file allocation table
 ;   ... rootDirectory
+;   ... openFiles
 ; } size=512
 %define FAT_DATA_FAT_OFFSET 512
+
+; struct FAT_FileData {
+;   0: FAT_File public;
+;   12: bool open;
+;   13: uint32_t firstCluster;
+;   15: uint32_t currentCluster;
+;   19: uint32_t currentSectorInCluster;
+;   23: uint8_t buffer[SECTOR_SIZE (i.e. 512)];
+; } size=23+512
+%define FILE_DATA_OFFSET 23
+%define FILE_DATA_SIZE (512 + 23)
 
 global FAT_initialize
 ; bool FAT_initialize(DISK* disk)
@@ -181,12 +196,12 @@ FAT_readFat:
   jge .fat_too_large
 
 .fat_size_fine:
-  ; save fat_root_directory pointer
+  ; save fat_open_files pointer
   push bx
 
   add bx, ax
-  mov [fat_root_directory + 2], es
-  mov [fat_root_directory], bx
+  mov [fat_open_files + 2], es
+  mov [fat_open_files], bx
 
   pop bx
 
@@ -229,29 +244,27 @@ FAT_readRootDirectory:
 
   push es
   push bx
+  push di
 
   ;
 
-  mov ax, [fat_root_directory + 2]
+  ; big memset to ensure 'isopen' is false for all open files
+  push MAX_OPEN_FILES * FILE_DATA_SIZE
+  push 0
+  mov ax, [fat_open_files + 2]
   push ax
-  mov ax, [fat_root_directory]
+  mov ax, [fat_open_files]
+  push ax
+  call memset_far
+  add sp, 8
+
+  mov ax, [fat_open_files + 2]
+  push ax
+  mov ax, [fat_open_files]
+  add ax, FILE_DATA_OFFSET
   push ax
 
-  mov es, [fat_data + 2]
-  mov bx, [fat_data]
-  mov ax, es:[bx + 17] ; dir entries count
-  shl ax, 5 ; ax *= sizeof(DirectoryEntry)
-
-  xor dx, dx
-  mov cx, es:[bx + 11] ; bytes per sector
-  div word cx
-
-  or dx, dx
-  jz .zero
-  inc ax
-.zero:
-
-  push ax
+  push 1
 
   xor ax, ax
   mov al, es:[bx + 16] ; fat count
@@ -267,7 +280,28 @@ FAT_readRootDirectory:
   call diskReadSectors
   add sp, 12
 
+  or ax, ax
+  jnz .finish
+
+  mov es, [fat_open_files + 2]
+  mov bx, [fat_open_files]
+  mov word es:[bx], 0 ; handle
+  mov word es:[bx + 2], 1 ; is directory
+  mov word es:[bx + 4], 0 ; position lo
+  mov word es:[bx + 6], 0 ; position hi
+  mov word es:[bx + 8], di ; size lo
+  mov word es:[bx + 10], 0 ; size hi
+  mov byte es:[bx + 12], 1 ; is open
+  mov word es:[bx + 13], 0 ; first cluster lo
+  mov word es:[bx + 15], 0 ; first cluster hi
+  mov word es:[bx + 15], 0 ; current cluster lo
+  mov word es:[bx + 17], 0 ; current cluster hi
+  mov word es:[bx + 19], 0 ; current sector lo
+  mov word es:[bx + 21], 0 ; current sector hi
+
+.finish:
   ; return
+  pop di
   pop bx
   pop es
 
@@ -289,4 +323,5 @@ section WDATA CLASS=DATA
 disk: dw 0
 
 ; DirectoryEntry[]
-fat_root_directory: dw 0000h, 0050h
+; index 0 is always the root directory
+fat_open_files: dw 0000h, 0050h

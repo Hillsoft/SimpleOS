@@ -95,3 +95,80 @@ strcpy:
   mov sp, bp
   pop bp
   ret
+
+global memset
+; void memset(char* dst, char val, uint16_t count)
+memset:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push di
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - dst
+  ; [bp + 6] - val
+  ; [bp + 8] - count
+
+  mov ax, [bp + 8]
+  mov cl, [bp + 6]
+  mov di, [bp + 4]
+
+.loop:
+  or ax, ax
+  jz .finish
+
+  mov [di], cl
+  inc di
+  dec ax
+
+  jmp .loop
+
+.finish:
+  ; return
+  pop di
+
+  mov sp, bp
+  pop bp
+  ret
+
+global memset_far
+; void memset_far(char far* dst, char val, uint16_t count)
+memset_far:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push di
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - dst
+  ; [bp + 8] - val
+  ; [bp + 10] - count
+
+  mov ax, [bp + 10]
+  mov cl, [bp + 8]
+  mov es, [bp + 6]
+  mov di, [bp + 4]
+
+.loop:
+  or ax, ax
+  jz .finish
+
+  mov es:[di], cl
+  inc di
+  dec ax
+
+  jmp .loop
+
+.finish:
+  ; return
+  pop di
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret

@@ -5,10 +5,12 @@ bits 16
 %define FAT_MEMORY_SIZE_LO 0x0000
 %define SECTOR_SIZE 512
 %define MAX_OPEN_FILES 10
+%define MAX_PATH_SIZE 256
 
 extern diskReadSectors
 extern puts
 extern memset_far
+extern memeq_far
 
 section TEXT class=CODE
 
@@ -141,7 +143,110 @@ FAT_open:
   push bp
   mov bp, sp
 
+  push es
+  push bx
+  push si
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - path
+
+  sub sp, MAX_PATH_SIZE
+
+  ; [sp + 0] - path_buffer (MAX_PATH_SIZE bytes)
+
+  mov si, [bp + 4]
+
+  ; ignore leading slash
+  mov ax, [si]
+  cmp ax, '/'
+  jne .leading_slash_check_done
+  inc si
+.leading_slash_check_done:
+
+  push si
+  call FAT_find_file
+  add sp, 2
+  or ax, ax
+  jnz .found_file
+  or dx, dx
+  jnz .found_file
+  jmp .finish
+
+.found_file:
+  push dx
+  push ax
+  call FAT_open_directory_entry
+  add sp, 4
+
+.finish:
   ; return
+  add sp, MAX_PATH_SIZE
+
+  pop si
+  pop bx
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret
+
+; FAT_DirectoryEntry far* FAT_find_file(const char* name)
+FAT_find_file:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push bx
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - name
+
+  mov es, [fat_data + 2]
+  mov bx, [fat_data]
+  mov cx, es:[bx + 17] ; dirEntryCount
+
+  mov es, [fat_open_files + 2]
+  mov bx, [fat_open_files]
+  add bx, FILE_DATA_OFFSET
+
+.loop:
+  or cx, cx
+  jz .found
+
+  push cx
+  mov ax, [bp + 4]
+  push 11
+  push es
+  push bx
+  push ds
+  push ax
+  call memeq_far
+  add sp, 10
+  pop cx
+
+  or ax, ax
+  jz .found
+
+  dec cx
+  jmp .loop
+
+.not_found:
+  xor dx, dx
+  xor ax, ax
+  jmp .finish
+
+.found:
+  mov dx, es
+  mov ax, bx
+
+.finish:
+  ; return
+  pop bx
+  pop es
+
   mov sp, bp
   pop bp
   ret

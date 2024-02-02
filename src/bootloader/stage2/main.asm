@@ -16,6 +16,7 @@ extern printf
 
 extern diskInitialize
 extern FAT_initialize
+extern FAT_open
 
 extern strchr
 extern strcpy
@@ -102,6 +103,27 @@ entry:
   call puts
   add sp, 2
 
+  push test_file_name
+  call FAT_open
+  add sp, 2
+
+  or ax, ax
+  jnz .file_open_success
+  or dx, dx
+  jnz .file_open_success
+  jmp .file_open_fail
+
+.file_open_success:
+  push msg_file_open_success
+  call puts
+  add sp, 2
+
+  jmp .halt
+
+.file_open_fail:
+  push msg_file_open_fail
+  call puts
+  add sp, 2
   jmp .halt
 
 .disk_init_fail:
@@ -145,9 +167,15 @@ msg_init_disk_fail: db 'Failed to initialise disc', ENDL, 0
 
 msg_fat_init_fail: db 'Failed to initialise FAT filesystem', ENDL, 0
 
+msg_file_open_fail: db ' Failed to open file', ENDL, 0
+
+msg_file_open_success: db 'Opened file', ENDL, 0
+
 test_strchr: db 'part1/part2', ENDL, 0
 
 test_strcpy: times 100 db 'a', 0
+
+test_file_name: db 'TEST    TXT', 0
 
 section WDATA class=DATA
 

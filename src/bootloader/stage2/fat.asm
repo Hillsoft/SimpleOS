@@ -75,12 +75,12 @@ section TEXT class=CODE
 ;   0: FAT_File public;
 ;   12: bool open;
 ;   13: uint32_t firstCluster;
-;   15: uint32_t currentCluster;
-;   19: uint32_t currentSectorInCluster;
-;   23: uint8_t buffer[SECTOR_SIZE (i.e. 512)];
-; } size=23+512
-%define FILE_DATA_OFFSET 23
-%define FILE_DATA_SIZE (512 + 23)
+;   17: uint32_t currentCluster;
+;   21: uint32_t currentSectorInCluster;
+;   25: uint8_t buffer[SECTOR_SIZE (i.e. 512)];
+; } size=25+512
+%define FILE_DATA_OFFSET 25
+%define FILE_DATA_SIZE (512 + FILE_DATA_OFFSET)
 
 %define FAT_ATTRIBUTE_READ_ONLY 01h
 %define FAT_ATTRIBUTE_HIDDEN 02h
@@ -323,11 +323,11 @@ FAT_open_directory_entry:
   mov word es:[bx + 13], ax ; first cluster lo
   mov word es:[bx + 15], cx ; first cluster hi
 
-  mov word es:[bx + 15], ax ; current cluster lo
-  mov word es:[bx + 17], cx ; current cluster hi
+  mov word es:[bx + 17], ax ; current cluster lo
+  mov word es:[bx + 19], cx ; current cluster hi
 
-  mov word es:[bx + 19], 0 ; current sector lo
-  mov word es:[bx + 21], 0 ; current sector hi
+  mov word es:[bx + 21], 0 ; current sector lo
+  mov word es:[bx + 23], 0 ; current sector hi
 
   push cx
   push ax
@@ -335,7 +335,7 @@ FAT_open_directory_entry:
   add sp, 4
 
   push es
-  add bx, 23
+  add bx, FILE_DATA_OFFSET
   push bx
   push 1
   push dx
@@ -349,7 +349,7 @@ FAT_open_directory_entry:
   or ax, ax
   jz .finish
 
-  sub bx, 23
+  sub bx, FILE_DATA_OFFSET
 
   mov byte es:[bx + 12], 1 ; is open
   mov ax, bx
@@ -608,9 +608,9 @@ FAT_read_next_sector_to_buffer:
   mov es, [bp + 6]
   mov bx, [bp + 4]
 
-  mov ax, es:[bp + 19]
+  mov ax, es:[bx + 21]
   inc ax
-  mov es:[bp + 19], ax ; update current sector
+  mov es:[bx + 21], ax ; update current sector
 
   mov si, [fat_data]
   mov fs, [fat_data + 2]
@@ -621,19 +621,19 @@ FAT_read_next_sector_to_buffer:
   jl .cluster_updated
 
   xor ax, ax
-  mov es:[bp + 19], ax ; reset current sector
+  mov es:[bx + 21], ax ; reset current sector
 
-  mov ax, es:[bx + 15]
+  mov ax, es:[bx + 17]
   push ax
   call FAT_next_cluster
   add sp, 2
-  mov es:[bx + 15], ax
+  mov es:[bx + 17], ax
 
   cmp ax, 0xFF8
   jge .invalid_cluster
 
 .cluster_updated:
-  mov ax, es:[bx + 15] ; current cluster
+  mov ax, es:[bx + 17] ; current cluster
   push 0
   push ax
   call FAT_cluster_to_lba
@@ -641,7 +641,7 @@ FAT_read_next_sector_to_buffer:
   ; dx:ax = lba
 
   push es
-  add bx, 23
+  add bx, FILE_DATA_OFFSET
   push bx
   push 1
   push dx
@@ -902,10 +902,10 @@ FAT_readRootDirectory:
   mov byte es:[bx + 12], 1 ; is open
   mov word es:[bx + 13], 0 ; first cluster lo
   mov word es:[bx + 15], 0 ; first cluster hi
-  mov word es:[bx + 15], 0 ; current cluster lo
-  mov word es:[bx + 17], 0 ; current cluster hi
-  mov word es:[bx + 19], 0 ; current sector lo
-  mov word es:[bx + 21], 0 ; current sector hi
+  mov word es:[bx + 17], 0 ; current cluster lo
+  mov word es:[bx + 19], 0 ; current cluster hi
+  mov word es:[bx + 21], 0 ; current sector lo
+  mov word es:[bx + 23], 0 ; current sector hi
 
 .finish:
   ; return

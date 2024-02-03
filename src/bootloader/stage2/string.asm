@@ -4,6 +4,8 @@ global strchr
 global strcpy
 global strlen
 global streq
+global islower
+global toupper
 
 section TEXT class=CODE
 
@@ -170,6 +172,65 @@ streq:
   pop si
   pop di
 
+  mov sp, bp
+  pop bp
+  ret
+
+; bool islower(char c)
+islower:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - c
+
+  xor ax, ax
+
+  mov cx, [bp + 4]
+  mov dx, 'a'
+
+  cmp cx, dx
+  jl .finish
+
+  mov dx, 'z'
+  cmp cx, dx
+  jg .finish
+
+  mov ax, 1
+
+.finish:
+  ; return
+  mov sp, bp
+  pop bp
+  ret
+
+; char toupper(char c)
+toupper:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - c
+
+  mov ax, [bp + 4]
+  push ax
+  call islower
+  add sp, 2
+
+  mov cx, [bp + 4]
+  mov dx, cx
+  add dx, 'A' - 'a'
+
+  or ax, ax
+  cmovnz cx, dx
+
+  mov ax, cx
+
+  ; return
   mov sp, bp
   pop bp
   ret

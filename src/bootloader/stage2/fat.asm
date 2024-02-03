@@ -214,7 +214,7 @@ FAT_find_file:
 
 .loop:
   or cx, cx
-  jz .found
+  jz .not_found
 
   push cx
   mov ax, [bp + 4]
@@ -228,7 +228,7 @@ FAT_find_file:
   pop cx
 
   or ax, ax
-  jz .found
+  jnz .found
 
   dec cx
   jmp .loop

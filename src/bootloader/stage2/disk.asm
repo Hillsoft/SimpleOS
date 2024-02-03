@@ -272,6 +272,7 @@ getDriveParams:
 
   ; heads
   mov cl, dh
+  add cl, 1 ; feels silly but makes this work
   mov si, [bp + 12]
   mov [si], cx
 

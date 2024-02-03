@@ -46,6 +46,7 @@ struct FixupData {
     LOW_ORDER_BYTE = 0,
     OFFSET_16BIT = 1,
     SEGMENT_BASE_16BIT = 2,
+    OFFSET_32BIT = 9,
     // There are other valid locations, but we don't support them
   };
 

@@ -331,7 +331,8 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
       FixupData::LocationType location = static_cast<FixupData::LocationType>(0b1111 & (headerHi >> 2));
       if (location != FixupData::LocationType::LOW_ORDER_BYTE
           && location != FixupData::LocationType::OFFSET_16BIT
-          && location != FixupData::LocationType::SEGMENT_BASE_16BIT) {
+          && location != FixupData::LocationType::SEGMENT_BASE_16BIT
+          && location != FixupData::LocationType::OFFSET_32BIT) {
         throw std::runtime_error{"Invalid fixup location type"};
       }
 

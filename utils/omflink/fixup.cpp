@@ -46,7 +46,8 @@ void writeTranslationUnit(uint8_t* outBuffer, const NameSet& globalNames, const 
           throw std::runtime_error{"Unsupported fixup frame thread"};
         }
 
-        if (fixup.locationType != FixupData::LocationType::OFFSET_16BIT) {
+        if (fixup.locationType != FixupData::LocationType::OFFSET_16BIT
+          && fixup.locationType != FixupData::LocationType::OFFSET_32BIT) {
           throw std::runtime_error{"Unsupported fixup location type"};
         }
 
@@ -65,6 +66,10 @@ void writeTranslationUnit(uint8_t* outBuffer, const NameSet& globalNames, const 
         }
 
         *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress) = targetAddress + sourceData;
+
+        if (fixup.locationType == FixupData::LocationType::OFFSET_32BIT) {
+          *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress + 2) = 0;
+        }
       }
     }
   }

@@ -26,6 +26,7 @@ diskInitialize:
 
   ; save drive->id
   mov si, [bp + 4]
+  xor ax, ax
   mov al, [bp + 6]
   mov [si], al
 

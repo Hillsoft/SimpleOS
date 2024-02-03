@@ -89,6 +89,8 @@ section TEXT class=CODE
 %define FAT_ATTRIBUTE_DIRECTORY 10h
 %define FAT_ATTRIBUTE_ARCHIVE 20h
 
+%define FAT_ROOT_DIRECTORY_HANDLE 0
+
 global FAT_initialize
 ; bool FAT_initialize(DISK* disk)
 FAT_initialize:
@@ -562,6 +564,10 @@ FAT_read:
   or cx, cx
   jz .takeLoopDone
 
+  mov ax, es:[bx]
+  cmp ax, FAT_ROOT_DIRECTORY_HANDLE
+  je .rootDirectoryReadNextSector
+
   push cx ; to restore
 
   push es
@@ -575,6 +581,29 @@ FAT_read:
   jz .takeLoopDone
 
   jmp .takeLoop
+
+.rootDirectoryReadNextSector:
+  mov ax, es:[bx + 17]
+  mov dx, es:[bx + 19]
+  add ax, 1
+  adc dx, 0
+  mov es:[bx + 17], ax
+  mov es:[bx + 19], dx
+
+  push es
+  add bx, FILE_DATA_OFFSET
+  push bx
+  sub bx, FILE_DATA_OFFSET
+  push 1
+  push dx
+  push ax
+  mov ax, [disk]
+  push ax
+  call diskReadSectors
+  add sp, 12
+
+  or ax, ax
+  jnz .takeLoop
 
 .takeLoopDone:
 
@@ -824,6 +853,10 @@ FAT_readRootDirectory:
   push bp
   mov bp, sp
 
+  sub sp, 4
+
+  ; [bp - 4] - start lba
+
   push es
   push bx
   push di
@@ -872,6 +905,8 @@ FAT_readRootDirectory:
   mov cx, es:[bx + 14]
   add ax, cx
   adc dx, 0
+  mov [bp - 4], ax
+  mov [bp - 2], dx
   push dx
   push ax
 
@@ -891,6 +926,9 @@ FAT_readRootDirectory:
   or ax, ax
   jz .finish
 
+  mov cx, [bp - 4]
+  mov dx, [bp - 2]
+
   mov es, [fat_open_files + 2]
   mov bx, [fat_open_files]
   mov word es:[bx], 0 ; handle
@@ -900,10 +938,10 @@ FAT_readRootDirectory:
   mov word es:[bx + 8], di ; size lo
   mov word es:[bx + 10], 0 ; size hi
   mov byte es:[bx + 12], 1 ; is open
-  mov word es:[bx + 13], 0 ; first cluster lo
-  mov word es:[bx + 15], 0 ; first cluster hi
-  mov word es:[bx + 17], 0 ; current cluster lo
-  mov word es:[bx + 19], 0 ; current cluster hi
+  mov word es:[bx + 13], cx ; first cluster lo
+  mov word es:[bx + 15], dx ; first cluster hi
+  mov word es:[bx + 17], cx ; current cluster lo
+  mov word es:[bx + 19], dx ; current cluster hi
   mov word es:[bx + 21], 0 ; current sector lo
   mov word es:[bx + 23], 0 ; current sector hi
 

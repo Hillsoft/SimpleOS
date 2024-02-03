@@ -17,6 +17,8 @@ extern printf
 extern diskInitialize
 extern FAT_initialize
 extern FAT_open
+extern FAT_read
+extern memcpy_far
 
 extern strchr
 extern strcpy
@@ -114,7 +116,34 @@ entry:
   jmp .file_open_fail
 
 .file_open_success:
+  mov es, dx
+  mov bx, ax
+
   push msg_file_open_success
+  call puts
+  add sp, 2
+
+  xor ax, ax
+  mov al, es:[bx + 23]
+  push ax
+  mov ax, es:[bx]
+  push ax ; file handle
+  mov ax, es:[bx + 8] ; file size
+  push ax
+  push msg_file_size
+  call printf
+  add sp, 6
+
+  push file_out_buffer
+  push 99
+  push es
+  push bx
+  call FAT_read
+  add sp, 8
+
+  ; TODO: check result
+
+  push file_out_buffer
   call puts
   add sp, 2
 
@@ -180,3 +209,5 @@ test_file_name: db 'TEST    TXT', 0
 section WDATA class=DATA
 
 disk: times 8 db 0
+
+file_out_buffer: times 100 db 0

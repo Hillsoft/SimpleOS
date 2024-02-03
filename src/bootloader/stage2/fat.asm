@@ -385,9 +385,13 @@ FAT_cluster_to_lba:
 
   xor cx, cx
   mov cl, es:[bx + 13]
-  sub cl, 2
 
   mov ax, [bp + 4]
+  mov dx, [bp + 6]
+  sub ax, 2
+  sbb dx, 0
+  mov [bp + 6], dx
+
   mul word cx
   push ax
   push dx

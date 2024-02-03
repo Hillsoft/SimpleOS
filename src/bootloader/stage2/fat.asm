@@ -570,13 +570,22 @@ FAT_readRootDirectory:
 
   xor ax, ax
   mov al, es:[bx + 16] ; fat count
-  mov dx, es:[bx + 22] ; sectors per fat
-  mul word dx
+  mov cx, es:[bx + 22] ; sectors per fat
+  mul word cx
   mov cx, es:[bx + 14]
   add ax, cx
   adc dx, 0
   push dx
   push ax
+
+  ; update data_section_lba with correct values
+  mov cx, [data_section_lba]
+  add cx, ax
+  mov [data_section_lba], cx
+  mov cx, [data_section_lba + 2]
+  adc cx, dx
+  mov [data_section_lba + 2], cx
+
   mov ax, [disk]
   push ax
   call diskReadSectors

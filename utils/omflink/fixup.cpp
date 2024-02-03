@@ -37,9 +37,8 @@ uint16_t getTargetAddress(const FixupData& fixup, const NameSet& globalNames, ui
 
 void writeTranslationUnit(uint8_t* outBuffer, const NameSet& globalNames, const TranslationUnit& unit) {
   for (const auto& segment : unit.segments) {
-    uint16_t currentBase = segment.baseAddress;
-
     for (const auto& dataBlock : segment.dataBlocks) {
+      uint16_t currentBase = segment.baseAddress + dataBlock.dataOffset;
       std::memcpy(outBuffer + currentBase, dataBlock.data.data(), dataBlock.data.size());
 
       for (const auto& fixup : dataBlock.fixups) {

@@ -19,6 +19,7 @@ section TEXT class=CODE
 ;   0: uint16_t handle; index into openFiles array
 ;   2: bool isDirectory;
 ;   4: uint32_t position;
+%define FAT_File_position 4
 ;   8: uint32_t size;
 ; } size=12
 
@@ -75,7 +76,9 @@ section TEXT class=CODE
 ;   0: FAT_File public;
 ;   12: bool open;
 ;   13: uint32_t firstCluster;
+%define FAT_File_firstCluster 13
 ;   17: uint32_t currentCluster;
+%define FAT_File_currentCluster 17
 ;   21: uint32_t currentSectorInCluster;
 ;   25: uint8_t buffer[SECTOR_SIZE (i.e. 512)];
 ; } size=25+512
@@ -742,9 +745,39 @@ FAT_close:
   add bx, ax
   ; es:bx is pointer to file data
 
+  cmp ax, FAT_ROOT_DIRECTORY_HANDLE
+  jne .normalFile
+
+.rootDirectory:
+  mov word es:[bx + FAT_File_position], 0
+  mov word es:[bx + FAT_File_position + 2], 0
+
+  mov ax, es:[bx + FAT_File_firstCluster]
+  mov es:[bx + FAT_File_currentCluster], ax
+  mov ax, es:[bx + FAT_File_firstCluster + 2]
+  mov es:[bx + FAT_File_currentCluster + 2], ax
+
+  push es
+  add bx, FILE_DATA_OFFSET
+  push bx
+  sub bx, FILE_DATA_OFFSET
+  push 1
+  mov ax, es:[bx + FAT_File_firstCluster + 2]
+  push ax
+  mov ax, es:[bx + FAT_File_firstCluster]
+  push ax
+  mov ax, [disk]
+  push ax
+  call diskReadSectors
+  add sp, 12
+
+  jmp .finish
+
+.normalFile:
   ; set is open to false
   mov byte es:[bx + 12], 0
 
+.finish:
   ; return
   pop es
   pop bx

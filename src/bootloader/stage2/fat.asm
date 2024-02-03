@@ -267,14 +267,14 @@ FAT_open_directory_entry:
   ; [bp + 2] - return address
   ; [bp + 4] - entry
 
-  mov es, [fat_open_files]
-  mov bx, [fat_open_files + 2]
+  mov es, [fat_open_files + 2]
+  mov bx, [fat_open_files]
 
   xor ax, ax
 
 .file_search_loop:
-  mov cx, es:[bx + 12]
-  or cx, cx
+  mov cl, es:[bx + 12]
+  or cl, cl
 
   jz .found_file
 

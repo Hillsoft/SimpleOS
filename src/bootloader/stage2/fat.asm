@@ -489,14 +489,15 @@ FAT_readFat:
 
   pop bx
 
+  mov dx, es:[bx + 14]
+
   add bx, FAT_DATA_FAT_OFFSET
   push es
   push bx
   push cx
   xor ax, ax
   push ax
-  mov ax, es:[bx + 14]
-  push ax
+  push dx
   mov ax, [disk]
   push ax
   call diskReadSectors

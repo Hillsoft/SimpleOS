@@ -296,8 +296,8 @@ FAT_open_directory_entry:
   ; ax = file handle
   ; es:bx = file pointer
 
-  mov fs, [bp + 4]
-  mov si, [bp + 6]
+  mov fs, [bp + 6]
+  mov si, [bp + 4]
 
   mov word es:[bx], ax ; handle
 
@@ -343,9 +343,11 @@ FAT_open_directory_entry:
   call diskReadSectors
   add sp, 12
 
-  or ax, ax
   xor dx, dx
+  or ax, ax
   jz .finish
+
+  sub bx, 23
 
   mov byte es:[bx + 12], 1 ; is open
   mov ax, bx

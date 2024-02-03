@@ -239,6 +239,7 @@ FAT_find_file:
   or ax, ax
   jnz .found
 
+  add bx, 32
   dec cx
   jmp .loop
 
@@ -998,7 +999,7 @@ msg_invalid_cluster: db 'FAT: Invalid cluster', ENDL, 0
 msg_read_failed: db 'FAT: Read failed', ENDL, 0
 
 ; FAT_Data far*
-fat_data: dw 0000h, 0050h
+fat_data: dw 0000h, 1000h
 
 section WDATA CLASS=DATA
 
@@ -1007,6 +1008,6 @@ disk: dw 0
 
 ; FAT_FileData[]
 ; index 0 is always the root directory
-fat_open_files: dw 0000h, 0050h
+fat_open_files: dw 0000h, 1000h
 
 data_section_lba: dd 0

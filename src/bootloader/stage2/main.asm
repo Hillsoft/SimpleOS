@@ -196,7 +196,7 @@ msg_init_disk_fail: db 'Failed to initialise disc', ENDL, 0
 
 msg_fat_init_fail: db 'Failed to initialise FAT filesystem', ENDL, 0
 
-msg_file_open_fail: db ' Failed to open file', ENDL, 0
+msg_file_open_fail: db 'Failed to open file', ENDL, 0
 
 msg_file_open_success: db 'Opened file', ENDL, 0
 

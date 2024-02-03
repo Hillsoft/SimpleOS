@@ -14,7 +14,7 @@ $(TOOLS_DIR)/omflink.exe: $(OMFLINK__BUILD_DIR)/omflink.exe
 	cp $(OMFLINK__BUILD_DIR)/omflink.exe $(TOOLS_DIR)/omflink.exe
 
 $(OMFLINK__BUILD_DIR)/omflink.exe: $(addprefix $(OMFLINK__BUILD_DIR)/,$(OMFLINK__OBJS))
-	$(CXX) $(LDFLAGS) -o $(OMFLINK__BUILD_DIR)/omflink.exe $(addprefix $(OMFLINK__BUILD_DIR)/,$(OMFLINK__OBJS))
+	+$(CXX) $(LDFLAGS) -o $(OMFLINK__BUILD_DIR)/omflink.exe $(addprefix $(OMFLINK__BUILD_DIR)/,$(OMFLINK__OBJS))
 
 $(OMFLINK__BUILD_DIR)/%.o: $(OMFLINK__SRC_DIR)/%.cpp
 	@mkdir -p $(OMFLINK__BUILD_DIR)

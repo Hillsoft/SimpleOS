@@ -246,6 +246,52 @@ strlen:
   pop bp
   ret
 
+global memcpy_far
+; void memcpy_far(char far* dst, const char far* src, uint16_t count)
+memcpy_far:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push fs
+  push di
+  push si
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - dst
+  ; [bp + 8] - src
+  ; [bp + 12] - count
+
+  mov cx, [bp + 12]
+  mov di, [bp + 4]
+  mov es, [bp + 6]
+  mov si, [bp + 8]
+  mov fs, [bp + 10]
+
+.loop:
+  or cx, cx
+  jz .finish
+
+  mov al, fs:[si]
+  mov es:[di], al
+  inc si
+  inc di
+  dec cx
+  jmp .loop
+
+.finish:
+  ; return
+  pop si
+  pop di
+  pop fs
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret
+
 global memeq_far
 ; bool memeq(const char far* a, const char far* b, uint16_t count)
 memeq_far:

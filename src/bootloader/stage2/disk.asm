@@ -62,6 +62,11 @@ diskReadSectors:
   push bp
   mov bp, sp
 
+  sub sp, 6
+  ; [bp - 6] - head
+  ; [bp - 4] - sector
+  ; [bp - 2] - cylinder
+
   push bx
   push si
   push di
@@ -73,16 +78,12 @@ diskReadSectors:
   ; [bp + 10] - sectors
   ; [bp + 12] - dataOut
 
-  sub sp, 6
-  ; [sp + 0] - head
-  ; [sp + 2] - sector
-  ; [sp + 4] - cylinder
-
-  mov bx, sp
-  add bx, 4
-  mov si, sp
-  add si, 2
-  mov di, sp
+  mov bx, bp
+  sub bx, 2
+  mov si, bp
+  sub si, 4
+  mov di, bp
+  sub di, 6
 
   push di
   push si
@@ -101,12 +102,8 @@ diskReadSectors:
   mov si, [si]
   mov di, [di]
 
-  ; [sp + 0] - loop index
-  mov dx, di
-  mov di, sp
-  mov cx, 2
-  mov [di], cx
-  mov di, dx
+  ; [bp - 2] - loop index
+  mov word [bp - 2], 2
 
 .readLoop:
   mov ax, [bp + 14]
@@ -130,24 +127,21 @@ diskReadSectors:
   or ax, ax
   jnz .finished
 
-  mov dx, di
-  mov di, sp
-  mov cx, [di]
+  mov cx, [bp - 2]
   dec cx
   or cx, cx
   jz .finished
 
-  mov [di], cx
-  mov di, dx
+  mov [bp - 2], cx
   jmp .readLoop
 
 .finished:
   ; return
-  add sp, 6
-
   pop di
   pop si
   pop bx
+
+  add sp, 6
 
   mov sp, bp
   pop bp
@@ -209,8 +203,7 @@ diskRead:
   mov dh, [bp + 10]
   mov dl, [bp + 4]
 
-  mov bx, [bp + 16]
-  mov es, bx
+  mov es, [bp + 16]
   mov bx, [bp + 14]
 
   stc

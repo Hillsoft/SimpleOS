@@ -68,7 +68,7 @@ void writeTranslationUnit(uint8_t* outBuffer, const NameSet& globalNames, const 
         *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress) = targetAddress + sourceData;
 
         if (fixup.locationType == FixupData::LocationType::OFFSET_32BIT) {
-          *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress + 2) = 0;
+          // *reinterpret_cast<uint16_t*>(outBuffer + sourceAddress + 2) = 0;
         }
       }
     }

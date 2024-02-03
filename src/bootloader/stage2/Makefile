@@ -1,4 +1,4 @@
-STAGE2__SRCS=after_protected.asm disk.asm fat.asm main.asm memory.asm printf.asm printutils.asm protected.asm string.asm
+STAGE2__SRCS=disk.asm fat.asm main.asm memory.asm printf.asm printutils.asm protected.asm string.asm
 STAGE2__OBJS=$(STAGE2__SRCS:.asm=.o)
 
 STAGE2__BUILD_DIR:=$(BUILD_DIR)

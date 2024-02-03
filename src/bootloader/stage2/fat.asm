@@ -9,6 +9,7 @@ bits 16
 
 extern diskReadSectors
 extern puts
+extern memcpy_far
 extern memset_far
 extern memeq_far
 
@@ -98,6 +99,7 @@ FAT_initialize:
   ; [bp + 0] - old bp
   ; [bp + 2] - return address
   ; [bp + 4] - disk
+
   mov ax, [bp + 4]
   mov [disk], ax
 
@@ -365,6 +367,54 @@ FAT_open_directory_entry:
   pop bp
   ret
 
+; uint16_t FAT_next_cluster(uint16_t currentCluster)
+FAT_next_cluster:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push bx
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - currentCluster
+
+  mov es, [fat_data + 2]
+  mov bx, [fat_data]
+  add bx, FAT_DATA_FAT_OFFSET
+
+  mov ax, [bp + 4]
+  mov cx, ax
+  shl ax, 1
+  add ax, cx
+  shr ax, 1 ; fatIndex = currentCluster * 3 / 2
+
+  mov cx, 1
+  and cx, ax
+  jz .even_cluster
+
+.odd_cluster:
+  add bx, ax
+  mov ax, es:[bx]
+  shr ax, 4
+  jmp .done
+
+.even_cluster:
+  add bx, ax
+  mov ax, es:[bx]
+  add ax, 0x0FFF
+  jmp .done
+
+.done:
+  ; return
+  pop bx
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret
+
 ; uint32_t FAT_cluster_to_lba(uint32_t cluster)
 FAT_cluster_to_lba:
   ; new call frame
@@ -415,9 +465,214 @@ FAT_cluster_to_lba:
   pop bp
   ret
 
-; global FAT_read
-; uint32_t FAT_read(FAT_File far* file, uint32_t byteCount, void* dataOut)
+global FAT_read
+; uint16_t FAT_read(FAT_File far* file, uint16_t byteCount, void* dataOut)
 FAT_read:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push es
+  push bx
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - file
+  ; [bp + 8] - byteCount
+  ; [bp + 10] - dataOut
+
+  mov bx, [bp + 4]
+  mov es, [bp + 6]
+  mov ax, es:[bx + 0] ; handle
+
+  mov es, [fat_open_files + 2]
+  mov bx, [fat_open_files]
+  mov cx, FILE_DATA_SIZE
+  mul word cx
+  add bx, ax
+  ; es:bx is pointer to file data
+
+  mov ax, es:[bx + 8]
+  mov dx, es:[bx + 10] ; size
+  mov cx, es:[bx + 6] ; pos hi
+  sub dx, cx
+  mov cx, es:[bx + 4] ; pos lo
+  sbb ax, cx
+
+  mov cx, [bp + 8]
+
+  ; dx:ax contains remaining bytes in file
+  or dx, dx
+  jnz .byteCountFine
+
+  cmp ax, cx
+  jge .byteCountFine
+
+  mov cx, ax
+
+.byteCountFine:
+  ; cx contains byte count
+
+  or cx, cx
+  jz .takeLoopDone
+
+.takeLoop:
+  mov ax, es:[bx + 4]
+  and ax, (512 - 1) ; pos % sector_size
+  mov dx, SECTOR_SIZE
+  sub dx, ax ; bytes left in buffer
+
+  mov ax, cx
+  cmp ax, dx
+  cmovg ax, dx
+  ; ax contains bytes to take
+
+  push cx ; to restore
+  push ax ; to restore
+
+  push ax ; count
+  push es
+  add bx, FILE_DATA_OFFSET
+  push bx
+  sub bx, FILE_DATA_OFFSET
+  push ds
+  mov ax, [bp + 10]
+  push ax
+  call memcpy_far
+  add sp, 10
+
+  pop ax ; restore
+
+  mov cx, [bp + 10]
+  add cx, ax
+  mov [bp + 10], cx ; update dataOut
+
+  mov cx, es:[bx + 4]
+  add cx, ax
+  mov es:[bx + 4], cx ; update position
+
+  pop cx
+  sub cx, ax
+  or cx, cx
+  jz .takeLoopDone
+
+  push cx ; to restore
+
+  push es
+  push bx
+  call FAT_read_next_sector_to_buffer
+  add sp, 4
+
+  pop cx ; restore
+
+  or ax, ax
+  jz .takeLoopDone
+
+  jmp .takeLoop
+
+.takeLoopDone:
+
+  ; return
+  pop bx
+  pop es
+
+  mov sp, bp
+  pop bp
+  ret
+
+; bool FAT_read_next_sector_to_buffer(FAT_FileData far*)
+FAT_read_next_sector_to_buffer:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push fs
+  push si
+  push es
+  push bx
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - file
+
+  mov es, [bp + 6]
+  mov bx, [bp + 4]
+
+  mov ax, es:[bp + 19]
+  inc ax
+  mov es:[bp + 19], ax ; update current sector
+
+  mov si, [fat_data]
+  mov fs, [fat_data + 2]
+  xor cx, cx
+  mov cl, fs:[si + 13] ; sectors per cluster
+
+  cmp ax, cx
+  jl .cluster_updated
+
+  xor ax, ax
+  mov es:[bp + 19], ax ; reset current sector
+
+  mov ax, es:[bx + 15]
+  push ax
+  call FAT_next_cluster
+  add sp, 2
+  mov es:[bx + 15], ax
+
+  cmp ax, 0xFF8
+  jge .invalid_cluster
+
+.cluster_updated:
+  mov ax, es:[bx + 15] ; current cluster
+  push 0
+  push ax
+  call FAT_cluster_to_lba
+  add sp, 4
+  ; dx:ax = lba
+
+  push es
+  add bx, 23
+  push bx
+  push 1
+  push dx
+  push ax
+  mov ax, [disk]
+  push ax
+  call diskReadSectors
+  add sp, 12
+
+  or ax, ax
+  jz .read_failed
+
+  mov ax, 1
+
+.finish:
+  ; return
+  pop bx
+  pop es
+  pop si
+  pop fs
+
+  mov sp, bp
+  pop bp
+  ret
+
+.invalid_cluster:
+  push msg_invalid_cluster
+  call puts
+  add sp, 2
+
+  xor ax, ax
+  jmp .finish
+
+.read_failed:
+  push msg_read_failed
+  call puts
+  add sp, 2
+
+  xor ax, ax
+  jmp .finish
+
 
 ; global FAT_readDirectory
 ; bool FAT_readDirectory(FAT_File far* file, FAT_DirectoryEntry* directoryEntry)
@@ -625,6 +880,8 @@ section RODATA CLASS=DATA
 msg_boot_sector_read_failed: db 'FAT: Read boot sector failed', ENDL, 0
 msg_fat_too_large: db 'FAT: File allocation table too large', ENDL, 0
 msg_too_many_open_files: db 'FAT: Failed to open file, too many already open', ENDL, 0
+msg_invalid_cluster: db 'FAT: Invalid cluster', ENDL, 0
+msg_read_failed: db 'FAT: Read failed', ENDL, 0
 
 ; FAT_Data far*
 fat_data: dw 0000h, 0050h

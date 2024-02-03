@@ -1,5 +1,8 @@
 bits 16
 
+global diskInitialize
+global diskReadSectors
+
 section TEXT class=CODE
 
 ; struct DISK {
@@ -10,7 +13,6 @@ section TEXT class=CODE
 ;   6: uint16_t heads;
 ; } size=8
 
-global diskInitialize
 ; bool diskInitialize(DISK* disk, uint8_t driveNumber)
 diskInitialize:
   ; new call frame
@@ -55,7 +57,6 @@ diskInitialize:
   pop bp
   ret
 
-global diskReadSectors
 ; bool diskReadSectors(DISK* disk, uint32_t lba, uint8_t sectors, uint8_t far* dataOut)
 diskReadSectors:
   ; new call frame

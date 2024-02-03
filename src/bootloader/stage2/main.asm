@@ -18,14 +18,13 @@ extern diskInitialize
 extern FAT_initialize
 extern FAT_open
 extern FAT_read
-extern memcpy_far
 
 extern strchr
 extern strcpy
 
-section ENTRY class=CODE
-
 global entry
+
+section ENTRY class=CODE
 
 ; we receive boot drive in dl
 entry:

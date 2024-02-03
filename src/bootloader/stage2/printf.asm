@@ -4,9 +4,9 @@ extern puts
 extern putc
 extern putuint
 
-section TEXT class=CODE
-
 global printf
+
+section TEXT class=CODE
 
 ; void printf(const char* fmt, ...)
 ; supported specifiers:

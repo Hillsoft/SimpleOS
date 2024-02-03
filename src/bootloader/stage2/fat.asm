@@ -13,6 +13,10 @@ extern memcpy_far
 extern memset_far
 extern memeq_far
 
+global FAT_initialize
+global FAT_open
+global FAT_read
+
 section TEXT class=CODE
 
 ; struct FAT_File {
@@ -94,7 +98,6 @@ section TEXT class=CODE
 
 %define FAT_ROOT_DIRECTORY_HANDLE 0
 
-global FAT_initialize
 ; bool FAT_initialize(DISK* disk)
 FAT_initialize:
   ; new call frame
@@ -143,7 +146,6 @@ FAT_initialize:
   pop bp
   ret
 
-global FAT_open
 ; FAT_File far* FAT_open(const char* path)
 FAT_open:
   ; new call frame
@@ -470,7 +472,6 @@ FAT_cluster_to_lba:
   pop bp
   ret
 
-global FAT_read
 ; uint16_t FAT_read(FAT_File far* file, uint16_t byteCount, void* dataOut)
 FAT_read:
   ; new call frame

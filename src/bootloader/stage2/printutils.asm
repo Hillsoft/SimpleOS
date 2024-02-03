@@ -1,10 +1,10 @@
 bits 16
 
-section TEXT class=CODE
-
 global putc
 global puts
 global putuint
+
+section TEXT class=CODE
 
 ; int 10h with ah=0Eh prints a character
 ; void putc(char c, uint16_t page)

@@ -1,8 +1,12 @@
 bits 16
 
+global strchr
+global strcpy
+global strlen
+global streq
+
 section TEXT class=CODE
 
-global strchr
 ; const char* strchr(const char* str, char chr)
 strchr:
   ; new call frame
@@ -43,7 +47,6 @@ strchr:
   pop bp
   ret
 
-global strcpy
 ; char* strcpy(char* dst, const char* src)
 strcpy:
   ; new call frame
@@ -96,7 +99,6 @@ strcpy:
   pop bp
   ret
 
-global strlen
 ; uint16_t strlen(const char* str)
 strlen:
   ; new call frame
@@ -129,7 +131,6 @@ strlen:
   pop bp
   ret
 
-global streq
 ; bool streq(const char* a, const char* b)
 streq:
   ; new call frame

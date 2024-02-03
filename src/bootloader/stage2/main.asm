@@ -123,17 +123,6 @@ entry:
   call puts
   add sp, 2
 
-  xor ax, ax
-  mov al, es:[bx + 23]
-  push ax
-  mov ax, es:[bx]
-  push ax ; file handle
-  mov ax, es:[bx + 8] ; file size
-  push ax
-  push msg_file_size
-  call printf
-  add sp, 6
-
   push file_out_buffer
   push 99
   push es

@@ -472,14 +472,20 @@ FAT_read:
   push bp
   mov bp, sp
 
+  sub sp, 2
+
   push es
   push bx
 
+  ; [bp - 2] - currentDataOut
   ; [bp + 0] - old bp
   ; [bp + 2] - return address
   ; [bp + 4] - file
   ; [bp + 8] - byteCount
   ; [bp + 10] - dataOut
+
+  mov ax, [bp + 10]
+  mov [bp - 2], ax
 
   mov bx, [bp + 4]
   mov es, [bp + 6]
@@ -536,16 +542,16 @@ FAT_read:
   push bx
   sub bx, FILE_DATA_OFFSET
   push ds
-  mov ax, [bp + 10]
+  mov ax, [bp - 2]
   push ax
   call memcpy_far
   add sp, 10
 
   pop ax ; restore
 
-  mov cx, [bp + 10]
+  mov cx, [bp - 2]
   add cx, ax
-  mov [bp + 10], cx ; update dataOut
+  mov [bp - 2], cx ; update dataOut
 
   mov cx, es:[bx + 4]
   add cx, ax
@@ -571,6 +577,10 @@ FAT_read:
   jmp .takeLoop
 
 .takeLoopDone:
+
+  mov ax, [bp - 2]
+  mov cx, [bp + 10]
+  sub ax, cx
 
   ; return
   pop bx

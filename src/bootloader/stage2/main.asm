@@ -130,7 +130,10 @@ entry:
   call FAT_read
   add sp, 8
 
-  ; TODO: check result
+  push ax
+  push msg_read_bytes
+  call printf
+  add sp, 4
 
   push file_out_buffer
   call puts
@@ -188,6 +191,8 @@ msg_fat_init_fail: db 'Failed to initialise FAT filesystem', ENDL, 0
 msg_file_open_fail: db 'Failed to open file', ENDL, 0
 
 msg_file_open_success: db 'Opened file', ENDL, 0
+
+msg_read_bytes: db 'Read %u bytes from file', ENDL, 0
 
 test_strchr: db 'part1/part2', ENDL, 0
 

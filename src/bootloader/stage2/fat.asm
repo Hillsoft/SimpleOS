@@ -688,9 +688,41 @@ FAT_read_next_sector_to_buffer:
 ; bool FAT_readDirectory(FAT_File far* file, FAT_DirectoryEntry* directoryEntry)
 FAT_readDirectory:
 
-; global FAT_close
-; FAT_close(FAT_File far* file)
+global FAT_close
+; void FAT_close(FAT_File far* file)
 FAT_close:
+  ; new call frame
+  push bp
+  mov bp, sp
+
+  push bx
+  push es
+
+  ; [bp + 0] - old bp
+  ; [bp + 2] - return address
+  ; [bp + 4] - file
+
+  mov bx, [bp + 4]
+  mov es, [bp + 6]
+  mov ax, es:[bx + 0] ; handle
+
+  mov es, [fat_open_files + 2]
+  mov bx, [fat_open_files]
+  mov cx, FILE_DATA_SIZE
+  mul word cx
+  add bx, ax
+  ; es:bx is pointer to file data
+
+  ; set is open to false
+  mov byte es:[bx + 12], 0
+
+  ; return
+  pop es
+  pop bx
+
+  mov sp, bp
+  pop bp
+  ret
 
 ; bool FAT_readBootSector()
 FAT_readBootSector:

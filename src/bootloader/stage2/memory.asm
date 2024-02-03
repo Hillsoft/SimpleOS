@@ -1,6 +1,7 @@
 bits 16
 
 global memset
+global memset_far
 global memcpy
 global memcpy_far
 global memeq_far
@@ -43,7 +44,6 @@ memset:
   pop bp
   ret
 
-global memset_far
 ; void memset_far(char far* dst, char val, uint16_t count)
 memset_far:
   ; new call frame

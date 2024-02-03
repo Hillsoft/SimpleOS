@@ -592,7 +592,7 @@ FAT_readRootDirectory:
   add sp, 12
 
   or ax, ax
-  jnz .finish
+  jz .finish
 
   mov es, [fat_open_files + 2]
   mov bx, [fat_open_files]

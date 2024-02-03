@@ -16,10 +16,11 @@ all: fat_demo omflink bootable_floppy
 
 bootable_floppy: build/main.img
 
-build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2/main.bin
+build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2/main.bin build/bootloader/stage3/main.bin
 	"./tools/fat_imgen" -c -F -f build/main.img -s build/bootloader/boot/main.bin
 	"./tools/fat_imgen" -m -f build/main.img -i res/test.txt -n test.txt
 	"./tools/fat_imgen" -m -f build/main.img -i build/bootloader/stage2/main.bin -n stage2.bin
+	"./tools/fat_imgen" -m -f build/main.img -i build/bootloader/stage3/main.bin -n stage3.bin
 	"./tools/fat_imgen" -m -f build/main.img -i build/kernel/main.bin -n kernel.bin
 
 build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
@@ -31,6 +32,10 @@ build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
 BUILD_DIR=build/bootloader/stage2
 SRC_DIR=src/bootloader/stage2
 include src/bootloader/stage2/Makefile
+
+BUILD_DIR=build/bootloader/stage3
+SRC_DIR=src/bootloader/stage3
+include src/bootloader/stage3/Makefile
 
 build/kernel/main.bin: src/kernel/main.asm
 	@mkdir -p build

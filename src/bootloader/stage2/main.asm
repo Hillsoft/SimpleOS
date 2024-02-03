@@ -22,6 +22,10 @@ extern FAT_read
 extern strchr
 extern strcpy
 
+extern memcpy_far
+
+extern switchToProtected
+
 global entry
 
 section ENTRY class=CODE
@@ -104,39 +108,85 @@ entry:
   call puts
   add sp, 2
 
-  push test_file_name
+;   push test_file_name
+;   call FAT_open
+;   add sp, 2
+
+;   or ax, ax
+;   jnz .file_open_success
+;   or dx, dx
+;   jnz .file_open_success
+;   jmp .file_open_fail
+
+; .file_open_success:
+;   mov es, dx
+;   mov bx, ax
+
+;   push msg_file_open_success
+;   call puts
+;   add sp, 2
+
+;   push file_out_buffer
+;   push 99
+;   push es
+;   push bx
+;   call FAT_read
+;   add sp, 8
+
+;   push ax
+;   push msg_read_bytes
+;   call printf
+;   add sp, 4
+
+;   push file_out_buffer
+;   call puts
+;   add sp, 2
+
+  push stage3_file_name
   call FAT_open
   add sp, 2
 
   or ax, ax
-  jnz .file_open_success
+  jnz .stage3_open_success
   or dx, dx
-  jnz .file_open_success
+  jnz .stage3_open_success
   jmp .file_open_fail
 
-.file_open_success:
+.stage3_open_success:
   mov es, dx
   mov bx, ax
 
-  push msg_file_open_success
-  call puts
-  add sp, 2
+  xor di, di
 
+.stage3_read_loop:
   push file_out_buffer
-  push 99
+  push 100
   push es
   push bx
   call FAT_read
   add sp, 8
 
-  push ax
-  push msg_read_bytes
-  call printf
-  add sp, 4
+  or ax, ax
+  jz .stage3_read_done
 
+  push ax ; to restore
+
+  push ax
+  push ds
   push file_out_buffer
-  call puts
-  add sp, 2
+  push 50h
+  push di
+  call memcpy_far
+  add sp, 10
+
+  pop ax
+  add di, ax
+
+  jmp .stage3_read_loop
+
+.stage3_read_done:
+
+  call switchToProtected
 
   jmp .halt
 
@@ -198,6 +248,8 @@ test_strchr: db 'part1/part2', ENDL, 0
 test_strcpy: times 100 db 'a', 0
 
 test_file_name: db 'TEST    TXT', 0
+
+stage3_file_name: db 'STAGE3  BIN', 0
 
 section WDATA class=DATA
 

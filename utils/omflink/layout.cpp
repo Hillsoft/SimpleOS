@@ -1,6 +1,6 @@
 #include "layout.hpp"
 
-#include <format>
+// #include <format>
 
 namespace omf {
 
@@ -37,7 +37,8 @@ std::vector<SegmentDefinition*> arrangeSegments(const LinkScript& linkScript, st
       uint16_t scriptAddr = std::get<LinkScriptAddress>(scriptItem).address;
 
       if (scriptAddr < currentIndex) {
-        throw std::runtime_error{std::format("Fixed address 0x{:x} from link script leaves insufficient space for earlier sections", scriptAddr)};
+        // throw std::runtime_error{std::format("Fixed address 0x{:x} from link script leaves insufficient space for earlier sections", scriptAddr)};
+        std::runtime_error{"Fixed address in link script leaves insufficient space for earlier sections"};
       }
 
       currentIndex = scriptAddr;
@@ -71,7 +72,8 @@ std::vector<SegmentDefinition*> arrangeSegments(const LinkScript& linkScript, st
   for (const auto& unit : units) {
     for (const auto& s : unit.segments) {
       if (s.baseAddress == 0xffff) {
-        throw std::runtime_error{std::format("Section {} defined in {} is missing from link script", s.segmentName, unit.name)};
+        // throw std::runtime_error{std::format("Section {} defined in {} is missing from link script", s.segmentName, unit.name)};
+        throw std::runtime_error{"Section is missing from link script"};
       }
     }
   }

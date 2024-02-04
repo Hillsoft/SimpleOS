@@ -1,14 +1,31 @@
-org 0x500
-
 bits 32
+
+extern __bss_start
+extern __end
+
+extern getHello
+
+section .entry2
 
 pstart:
   mov ax, 0x10
   mov ds, ax
   mov ss, ax
 
+  mov [boot_drive], dl
+
+  ; clear bss
+  mov edi, __bss_start
+  mov ecx, __end
+  sub ecx, edi
+  mov al, 0
+  cld
+  rep stosb
+
   ; print hello world
-  mov esi, msg_hello
+  call getHello
+
+  mov esi, eax
   mov edi, ScreenBuffer
   cld
 
@@ -31,5 +48,7 @@ pstart:
   jmp .halt
 
 ScreenBuffer equ 0xB8000
+
+boot_drive: db 0
 
 msg_hello: db 'Hello, we are in protected mode!', 0

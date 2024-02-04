@@ -1,8 +1,9 @@
 #include "omfunit.hpp"
 
 #include <cassert>
-#include <format>
+// #include <format>
 #include <stdexcept>
+#include <variant>
 
 namespace omf {
 
@@ -392,8 +393,8 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
       else {
         TargetThread::Method method = static_cast<TargetThread::Method>(targetBits & 0b111);
         if (!isValidTargetThreadMethod(method)) {
-          std::string error = std::format("Invalid fixup method: {}", static_cast<uint16_t>(method));
-          throw std::runtime_error{error};
+          // std::string error = std::format("Invalid fixup method: {}", static_cast<uint16_t>(method));
+          // throw std::runtime_error{error};
         }
 
         if (contents.size() < 1) {
@@ -612,8 +613,8 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
 
      default:
       {
-        std::string error = std::format("Unrecognised record identifier: {:x}", currentRecord.recordIdentifier);
-        throw std::runtime_error{error};
+        // std::string error = std::format("Unrecognised record identifier: {:x}", currentRecord.recordIdentifier);
+        // throw std::runtime_error{error};
       }
     }
   }

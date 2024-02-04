@@ -1,7 +1,7 @@
 #include "fixup.hpp"
 
 #include <cstring>
-#include <format>
+// #include <format>
 
 namespace omf {
 
@@ -22,8 +22,8 @@ uint16_t getTargetAddress(const FixupData& fixup, const NameSet& globalNames, ui
       const auto& extName = unit.imports[fixup.targetThread.index - 1];
       std::optional<GlobalName> name = globalNames.lookupName(extName.name);
       if (!name.has_value()) {
-        std::string error = std::format("Unresolved symbol: {}", extName.name);
-        throw std::runtime_error{error};
+        // std::string error = std::format("Unresolved symbol: {}", extName.name);
+        throw std::runtime_error{"Unresolved symbol"};
       }
       return name->segment.baseAddress + name->offset + fixup.targetDisplacement;
     }

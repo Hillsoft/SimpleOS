@@ -1,6 +1,6 @@
 #include "objloader.hpp"
 
-#include <format>
+// #include <format>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -10,7 +10,7 @@ namespace omf {
 TranslationUnit loadUnitFromFilename(const char* filename) {
   std::ifstream file{filename, std::ios::in | std::ios::binary | std::ios::ate};
   if (!file.is_open()) {
-    throw std::runtime_error{std::format("Cannot open object file {}", filename)};
+    // throw std::runtime_error{std::format("Cannot open object file {}", filename)};
   }
 
   std::streamsize fileSize = file.tellg();

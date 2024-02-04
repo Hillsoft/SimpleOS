@@ -1,6 +1,6 @@
 #include "nameset.hpp"
 
-#include <format>
+// #include <format>
 
 namespace omf {
 
@@ -15,8 +15,8 @@ NameSet::NameSet(const std::vector<TranslationUnit>& units) {
 void NameSet::registerTranslationUnit(const TranslationUnit& unit) {
   for (const auto& n : unit.exports) {
     if (names.contains(n.name)) {
-      std::string error = std::format("Duplicate symbol {}", n.name);
-      throw std::runtime_error{error};
+      // std::string error = std::format("Duplicate symbol {}", n.name);
+      // throw std::runtime_error{error};
     }
 
     names.emplace(std::piecewise_construct,

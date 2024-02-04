@@ -3,7 +3,7 @@ bits 32
 extern __bss_start
 extern __end
 
-extern getHello
+extern cstart
 
 section .entry2
 
@@ -14,34 +14,12 @@ pstart:
 
   mov [boot_drive], dl
 
-  ; clear bss
-  mov edi, __bss_start
-  mov ecx, __end
-  sub ecx, edi
-  mov al, 0
-  cld
-  rep stosb
-
   ; print hello world
-  call getHello
-
-  mov esi, eax
-  mov edi, ScreenBuffer
-  cld
-
-.loop:
-  lodsb
-  or al, al
-  jz .done
-
-  mov [edi], al
-
-  inc edi
-  inc edi
-
-  jmp .loop
-
-.done:
+  xor edx, edx
+  mov dl, [boot_drive]
+  push edx
+  call cstart
+  add sp, 2
 
 .halt:
   hlt
@@ -50,5 +28,3 @@ pstart:
 ScreenBuffer equ 0xB8000
 
 boot_drive: db 0
-
-msg_hello: db 'Hello, we are in protected mode!', 0

@@ -7,8 +7,7 @@ extern "C" {
 void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
   mysty::clrscr();
   mysty::puts("Hello, from cstart!\n");
-  mysty::putuint(2941);
-  mysty::putuint(2941, 16);
+  mysty::printf("Percent: %%\nChar: %c\nInt: %u\nString: %s", 'c', 543, "test string");
 }
 
 }

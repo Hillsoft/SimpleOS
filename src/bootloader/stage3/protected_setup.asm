@@ -85,8 +85,6 @@ loadGDT:
   lgdt [gdt_descriptor]
   ret
 
-SECTION RODATA CLASS=DATA
-
 KbdControllerDataPort equ 0x60
 KbdControllerCommandPort equ 0x64
 

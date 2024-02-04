@@ -9,6 +9,7 @@ namespace {
 constexpr int kScreenWidth = 80;
 constexpr int kScreenHeight = 25;
 constexpr uint8_t kDefaultColor = 0x7;
+constexpr const char* kDigits = "0123456789ABCDEF";
 
 volatile uint8_t* const g_screenBuffer = reinterpret_cast<uint8_t*>(0xB8000);
 int g_screenX = 0;
@@ -106,6 +107,20 @@ void puts(const char* str) {
   while (*str != 0) {
     putc(*str);
     str++;
+  }
+}
+
+void putuint(unsigned int i, unsigned int base) {
+  if (i == 0) {
+    putc('0');
+  }
+  else {
+    unsigned int cur = i % base;
+    unsigned int next = i / base;
+    if (next > 0) {
+      putuint(next, base);
+    }
+    putc(kDigits[cur]);
   }
 }
 

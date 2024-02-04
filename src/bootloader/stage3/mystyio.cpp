@@ -124,4 +124,12 @@ void putuint(unsigned int i, unsigned int base) {
   }
 }
 
+void putint(int i, unsigned int base) {
+  if (i < 0) {
+    putc('-');
+    i = -i;
+  }
+  putuint(static_cast<unsigned int>(i), base);
+}
+
 } // namespace mysty

@@ -8,6 +8,7 @@ void clrscr();
 void putc(char c);
 void puts(const char* str);
 void putuint(unsigned int i, unsigned int base = 10);
+void putint(int i, unsigned int base = 10);
 
 inline void printf(const char* format) {
   while (*format != 0) {
@@ -43,6 +44,34 @@ void printf(const char* format, Arg first, Args... args) {
         case 'u':
           if constexpr (is_convertible_t<Arg, unsigned int>::value) {
             putuint(static_cast<unsigned int>(first));
+          } else {
+            puts("<mismatched type in format>");
+          }
+          printf(format + 1, args...);
+          return;
+
+        case 'd':
+        case 'i':
+          if constexpr (is_convertible_t<Arg, int>::value) {
+            putint(static_cast<int>(first));
+          } else {
+            puts("<mismatched type in format>");
+          }
+          printf(format + 1, args...);
+          return;
+
+        case 'o':
+          if constexpr (is_convertible_t<Arg, int>::value) {
+            putint(static_cast<int>(first), 8);
+          } else {
+            puts("<mismatched type in format>");
+          }
+          printf(format + 1, args...);
+          return;
+
+        case 'X':
+          if constexpr (is_convertible_t<Arg, unsigned int>::value) {
+            putuint(static_cast<unsigned int>(first), 16);
           } else {
             puts("<mismatched type in format>");
           }

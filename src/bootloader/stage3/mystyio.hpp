@@ -15,23 +15,21 @@ inline void printf(const char* format) {
     if (*format != '%') {
       putc(*format);
       format++;
-    }
-    else {
+    } else {
       puts("<empty format data>");
     }
   }
 }
 
-template<typename Arg, typename ...Args>
+template <typename Arg, typename... Args>
 void printf(const char* format, Arg first, Args... args) {
   while (*format != 0) {
     if (*format != '%') {
       putc(*format);
       format++;
-    }
-    else {
+    } else {
       // Format specifier
-      *format++;
+      format += 1;
 
       switch (*format) {
         case 0:
@@ -101,7 +99,7 @@ void printf(const char* format, Arg first, Args... args) {
           break;
       }
 
-      *format++;
+      format += 1;
     }
   }
 }

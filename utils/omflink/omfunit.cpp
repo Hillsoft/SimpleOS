@@ -25,7 +25,8 @@ SegmentDefinition& lookupSegment(TranslationUnit& unit, uint8_t segmentIndex) {
   return unit.segments[segmentIndex - 1];
 }
 
-const SegmentDefinition& lookupSegment(const TranslationUnit& unit, uint8_t segmentIndex) {
+const SegmentDefinition& lookupSegment(
+    const TranslationUnit& unit, uint8_t segmentIndex) {
   if (segmentIndex == 0 || segmentIndex > unit.segments.size()) {
     throw std::runtime_error{"Out of bounds segment index"};
   }
@@ -46,10 +47,9 @@ RecordHeader parseRecordHeader(const RawRecord& record) {
   }
 
   return RecordHeader{
-    .unitName={
-      reinterpret_cast<const char*>(&*(record.recordContents.begin() + 1)),
-      reinterpret_cast<const char*>(&*record.recordContents.end())}
-  };
+      .unitName = {
+          reinterpret_cast<const char*>(&*(record.recordContents.begin() + 1)),
+          reinterpret_cast<const char*>(&*record.recordContents.end())}};
 }
 
 struct CommentRecord {};
@@ -76,9 +76,7 @@ ImportRecord parseImportRecord(const RawRecord& record) {
     }
 
     std::string_view name{
-      reinterpret_cast<const char*>(contents.data() + 1),
-      nameLength
-    };
+        reinterpret_cast<const char*>(contents.data() + 1), nameLength};
 
     names.emplace_back(name);
 
@@ -104,7 +102,8 @@ ExportRecord parseExportRecord(const RawRecord& record) {
   uint8_t groupIndex = record.recordContents[0];
   uint8_t segmentIndex = record.recordContents[1];
 
-  std::span<const uint8_t> contents = record.recordContents.subspan(segmentIndex == 0 ? 4 : 2);
+  std::span<const uint8_t> contents =
+      record.recordContents.subspan(segmentIndex == 0 ? 4 : 2);
   while (contents.size() > 0) {
     uint8_t nameLength = contents[0];
     if (contents.size() < nameLength + 4u) {
@@ -112,16 +111,15 @@ ExportRecord parseExportRecord(const RawRecord& record) {
     }
 
     std::string_view name{
-      reinterpret_cast<const char*>(contents.data() + 1),
-      nameLength
-    };
+        reinterpret_cast<const char*>(contents.data() + 1), nameLength};
 
-    uint16_t offset = *reinterpret_cast<const uint16_t*>(contents.data() + 1 + nameLength);
+    uint16_t offset =
+        *reinterpret_cast<const uint16_t*>(contents.data() + 1 + nameLength);
 
     names.push_back(ExportedName{
-      .name = name,
-      .segmentIndex = segmentIndex,
-      .offset = offset,
+        .name = name,
+        .segmentIndex = segmentIndex,
+        .offset = offset,
     });
 
     contents = contents.subspan(nameLength + 4);
@@ -148,15 +146,12 @@ NamesRecord parseNamesRecord(const RawRecord& record) {
     }
 
     names.emplace_back(
-      reinterpret_cast<const char*>(contents.data() + 1),
-      nameLength);
+        reinterpret_cast<const char*>(contents.data() + 1), nameLength);
 
     contents = contents.subspan(1 + nameLength);
   }
 
-  return NamesRecord{
-    .names = std::move(names)
-  };
+  return NamesRecord{.names = std::move(names)};
 }
 
 struct SegmentRecord {
@@ -178,25 +173,28 @@ SegmentRecord parseSegmentRecord(const RawRecord& record) {
   }
 
   uint8_t attributes = record.recordContents[0];
-  uint32_t segmentLength = *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1);
+  uint32_t segmentLength =
+      *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1);
   uint8_t segmentNameIndex = record.recordContents[3];
   uint8_t classNameIndex = record.recordContents[4];
   uint8_t overlayNameIndex = record.recordContents[5];
 
   // The high 3 bits
-  SegmentDefinition::Alignment alignment = static_cast<SegmentDefinition::Alignment>(attributes >> 5);
-  if (alignment != SegmentDefinition::Alignment::ABSOLUTE
-      && alignment != SegmentDefinition::Alignment::RELOCATABLE_BYTE_ALIGNED
-      && alignment != SegmentDefinition::Alignment::RELOCATABLE_2BYTE_ALIGNED
-      && alignment != SegmentDefinition::Alignment::RELOCATABLE_16BYTE_ALIGNED) {
+  SegmentDefinition::Alignment alignment =
+      static_cast<SegmentDefinition::Alignment>(attributes >> 5);
+  if (alignment != SegmentDefinition::Alignment::ABSOLUTE &&
+      alignment != SegmentDefinition::Alignment::RELOCATABLE_BYTE_ALIGNED &&
+      alignment != SegmentDefinition::Alignment::RELOCATABLE_2BYTE_ALIGNED &&
+      alignment != SegmentDefinition::Alignment::RELOCATABLE_16BYTE_ALIGNED) {
     throw std::runtime_error{"Invalid segment alignment"};
   }
 
-  SegmentDefinition::Combination combination = static_cast<SegmentDefinition::Combination>((attributes >> 2) & 0b111);
-  if (combination != SegmentDefinition::Combination::PRIVATE
-      && combination != SegmentDefinition::Combination::PUBLIC
-      && combination != SegmentDefinition::Combination::STACK
-      && combination != SegmentDefinition::Combination::COMMON) {
+  SegmentDefinition::Combination combination =
+      static_cast<SegmentDefinition::Combination>((attributes >> 2) & 0b111);
+  if (combination != SegmentDefinition::Combination::PRIVATE &&
+      combination != SegmentDefinition::Combination::PUBLIC &&
+      combination != SegmentDefinition::Combination::STACK &&
+      combination != SegmentDefinition::Combination::COMMON) {
     throw std::runtime_error{"Invalid segment combination"};
   }
 
@@ -214,32 +212,32 @@ SegmentRecord parseSegmentRecord(const RawRecord& record) {
   }
 
   return SegmentRecord{
-    .alignment = alignment,
-    .combination = combination,
-    .bitField = bitField,
-    .segmentLength = segmentLength,
-    .segmentNameIndex = segmentNameIndex,
-    .classNameIndex = classNameIndex,
-    .overlayNameIndex = overlayNameIndex,
+      .alignment = alignment,
+      .combination = combination,
+      .bitField = bitField,
+      .segmentLength = segmentLength,
+      .segmentNameIndex = segmentNameIndex,
+      .classNameIndex = classNameIndex,
+      .overlayNameIndex = overlayNameIndex,
   };
 }
 
 bool isValidFrameThreadMethod(FrameThread::Method method) {
-  return method == FrameThread::Method::SEGDEF
-      || method == FrameThread::Method::GRPDEF
-      || method == FrameThread::Method::EXTDEF
-      || method == FrameThread::Method::PREV_SEG
-      || method == FrameThread::Method::TARG_SEG;
+  return method == FrameThread::Method::SEGDEF ||
+      method == FrameThread::Method::GRPDEF ||
+      method == FrameThread::Method::EXTDEF ||
+      method == FrameThread::Method::PREV_SEG ||
+      method == FrameThread::Method::TARG_SEG;
 }
 
 bool isValidTargetThreadMethod(TargetThread::Method method) {
-  return method == TargetThread::Method::SEGDEF
-      || method == TargetThread::Method::GRPDEF
-      || method == TargetThread::Method::EXTDEF
-      || method == TargetThread::Method::FRAME_NUMBER
-      || method == TargetThread::Method::SEGDEF_ZERO_DISPLACE
-      || method == TargetThread::Method::GRPDEF_ZERO_DISPLACE
-      || method == TargetThread::Method::EXTDEF_ZERO_DISPLACE;
+  return method == TargetThread::Method::SEGDEF ||
+      method == TargetThread::Method::GRPDEF ||
+      method == TargetThread::Method::EXTDEF ||
+      method == TargetThread::Method::FRAME_NUMBER ||
+      method == TargetThread::Method::SEGDEF_ZERO_DISPLACE ||
+      method == TargetThread::Method::GRPDEF_ZERO_DISPLACE ||
+      method == TargetThread::Method::EXTDEF_ZERO_DISPLACE;
 }
 
 struct FixupRecord {
@@ -263,16 +261,17 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
       uint8_t tIndex = headerByte & 0b11;
 
       if (isFrameThread) {
-        FrameThread::Method method = static_cast<FrameThread::Method>((headerByte >> 2) & 0b111);
+        FrameThread::Method method =
+            static_cast<FrameThread::Method>((headerByte >> 2) & 0b111);
 
         if (!isValidFrameThreadMethod(method)) {
           throw std::runtime_error{"Invalid frame thread method"};
         }
 
         uint8_t index = 0;
-        if (method == FrameThread::Method::SEGDEF
-            || method == FrameThread::Method::GRPDEF
-            || method == FrameThread::Method::EXTDEF) {
+        if (method == FrameThread::Method::SEGDEF ||
+            method == FrameThread::Method::GRPDEF ||
+            method == FrameThread::Method::EXTDEF) {
           // we need to load index
           if (contents.size() < 1) {
             throw std::runtime_error{"Invalid thread format"};
@@ -282,24 +281,24 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         }
 
         threads[tIndex] = FrameThread{
-          .method = method,
-          .index = index,
+            .method = method,
+            .index = index,
         };
-      }
-      else {
-        TargetThread::Method method = static_cast<TargetThread::Method>((headerByte >> 2) & 0b111);
+      } else {
+        TargetThread::Method method =
+            static_cast<TargetThread::Method>((headerByte >> 2) & 0b111);
 
         if (!isValidTargetThreadMethod(method)) {
           throw std::runtime_error{"Invalid target thread method"};
         }
 
         uint8_t index = 0;
-        if (method == TargetThread::Method::SEGDEF
-            || method == TargetThread::Method::GRPDEF
-            || method == TargetThread::Method::EXTDEF
-            || method == TargetThread::Method::SEGDEF_ZERO_DISPLACE
-            || method == TargetThread::Method::GRPDEF_ZERO_DISPLACE
-            || method == TargetThread::Method::EXTDEF_ZERO_DISPLACE) {
+        if (method == TargetThread::Method::SEGDEF ||
+            method == TargetThread::Method::GRPDEF ||
+            method == TargetThread::Method::EXTDEF ||
+            method == TargetThread::Method::SEGDEF_ZERO_DISPLACE ||
+            method == TargetThread::Method::GRPDEF_ZERO_DISPLACE ||
+            method == TargetThread::Method::EXTDEF_ZERO_DISPLACE) {
           // we need to load index
           if (contents.size() < 1) {
             throw std::runtime_error{"Invalid thread format"};
@@ -309,12 +308,11 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         }
 
         threads[tIndex] = TargetThread{
-          .method = method,
-          .index = index,
+            .method = method,
+            .index = index,
         };
       }
-    }
-    else {
+    } else {
       // Current record is a fixup
       if (contents.size() < 3) {
         throw std::runtime_error{"Invalid fixup"};
@@ -323,22 +321,25 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
       uint8_t headerHi = contents[0];
       uint8_t headerLo = contents[1];
 
-      FixupData::RelativeTo relativeTo = static_cast<FixupData::RelativeTo>(0b1 & (headerHi >> 6));
-      if (relativeTo != FixupData::RelativeTo::SELF_RELATIVE
-          && relativeTo != FixupData::RelativeTo::SEGMENT_RELATIVE) {
+      FixupData::RelativeTo relativeTo =
+          static_cast<FixupData::RelativeTo>(0b1 & (headerHi >> 6));
+      if (relativeTo != FixupData::RelativeTo::SELF_RELATIVE &&
+          relativeTo != FixupData::RelativeTo::SEGMENT_RELATIVE) {
         throw std::runtime_error{"Invalid fixup relativeness"};
       }
 
-      FixupData::LocationType location = static_cast<FixupData::LocationType>(0b1111 & (headerHi >> 2));
-      if (location != FixupData::LocationType::LOW_ORDER_BYTE
-          && location != FixupData::LocationType::OFFSET_16BIT
-          && location != FixupData::LocationType::SEGMENT_BASE_16BIT
-          && location != FixupData::LocationType::OFFSET_32BIT) {
+      FixupData::LocationType location =
+          static_cast<FixupData::LocationType>(0b1111 & (headerHi >> 2));
+      if (location != FixupData::LocationType::LOW_ORDER_BYTE &&
+          location != FixupData::LocationType::OFFSET_16BIT &&
+          location != FixupData::LocationType::SEGMENT_BASE_16BIT &&
+          location != FixupData::LocationType::OFFSET_32BIT) {
         throw std::runtime_error{"Invalid fixup location type"};
       }
 
-      uint16_t dataRecordOffset = (static_cast<uint16_t>(headerHi & 0b11) << 8) | static_cast<uint16_t>(headerLo);
-
+      uint16_t dataRecordOffset =
+          (static_cast<uint16_t>(headerHi & 0b11) << 8) |
+          static_cast<uint16_t>(headerLo);
 
       uint8_t fixDataByte = contents[2];
       bool useFrameThread = (fixDataByte & 0b10000000) > 0;
@@ -357,17 +358,17 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         }
 
         frame = std::get<FrameThread>(threads[threadIndex]);
-      }
-      else {
-        FrameThread::Method method = static_cast<FrameThread::Method>(frameBits);
+      } else {
+        FrameThread::Method method =
+            static_cast<FrameThread::Method>(frameBits);
         if (!isValidFrameThreadMethod(method)) {
           throw std::runtime_error{"Invalid fixup method"};
         }
 
         uint8_t index = 0;
-        if (method == FrameThread::Method::SEGDEF
-            || method == FrameThread::Method::GRPDEF
-            || method == FrameThread::Method::EXTDEF) {
+        if (method == FrameThread::Method::SEGDEF ||
+            method == FrameThread::Method::GRPDEF ||
+            method == FrameThread::Method::EXTDEF) {
           if (contents.size() < 1) {
             throw std::runtime_error{"Invalid fixup"};
           }
@@ -376,8 +377,8 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         }
 
         frame = FrameThread{
-          .method = method,
-          .index = index,
+            .method = method,
+            .index = index,
         };
       }
 
@@ -389,12 +390,12 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         }
 
         target = std::get<TargetThread>(threads[threadIndex]);
-      }
-      else {
-        TargetThread::Method method = static_cast<TargetThread::Method>(targetBits & 0b111);
+      } else {
+        TargetThread::Method method =
+            static_cast<TargetThread::Method>(targetBits & 0b111);
         if (!isValidTargetThreadMethod(method)) {
-          // std::string error = std::format("Invalid fixup method: {}", static_cast<uint16_t>(method));
-          // throw std::runtime_error{error};
+          // std::string error = std::format("Invalid fixup method: {}",
+          // static_cast<uint16_t>(method)); throw std::runtime_error{error};
         }
 
         if (contents.size() < 1) {
@@ -404,8 +405,8 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         contents = contents.subspan(1);
 
         target = TargetThread{
-          .method = method,
-          .index = index,
+            .method = method,
+            .index = index,
         };
       }
 
@@ -414,17 +415,18 @@ FixupRecord parseFixupRecord(const RawRecord& record) {
         if (contents.size() < 2) {
           throw std::runtime_error{"Invalid fixup"};
         }
-        targetDisplacement = *reinterpret_cast<const uint16_t*>(contents.data());
+        targetDisplacement =
+            *reinterpret_cast<const uint16_t*>(contents.data());
         contents = contents.subspan(2);
       }
 
       result.push_back(FixupData{
-        .relativeTo = relativeTo,
-        .locationType = location,
-        .dataRecordOffset = dataRecordOffset,
-        .frameThread = frame,
-        .targetThread = target,
-        .targetDisplacement = targetDisplacement,
+          .relativeTo = relativeTo,
+          .locationType = location,
+          .dataRecordOffset = dataRecordOffset,
+          .frameThread = frame,
+          .targetThread = target,
+          .targetDisplacement = targetDisplacement,
       });
     }
   }
@@ -444,33 +446,37 @@ EnumeratedDataRecord parseEnumeratedDataRecord(const RawRecord& record) {
   }
 
   return EnumeratedDataRecord{
-    .data = LogicalData{
-      .segmentIndex = record.recordContents[0],
-      .dataOffset = *reinterpret_cast<const uint16_t*>(record.recordContents.data() + 1),
-      .data = record.recordContents.subspan(3),
-      .fixups = {},
-    }
-  };
+      .data = LogicalData{
+          .segmentIndex = record.recordContents[0],
+          .dataOffset = *reinterpret_cast<const uint16_t*>(
+              record.recordContents.data() + 1),
+          .data = record.recordContents.subspan(3),
+          .fixups = {},
+      }};
 }
 
 } // namespace
 
-TranslationUnit decodeUnit(std::span<const uint8_t> fileContents, std::unique_ptr<const uint8_t[]> rawBytes) {
+TranslationUnit decodeUnit(
+    std::span<const uint8_t> fileContents,
+    std::unique_ptr<const uint8_t[]> rawBytes) {
   return decodeUnit(extractRawRecords(fileContents), std::move(rawBytes));
 }
 
-TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_ptr<const uint8_t[]> rawBytes) {
+TranslationUnit decodeUnit(
+    const std::vector<RawRecord>& records,
+    std::unique_ptr<const uint8_t[]> rawBytes) {
   if (records.size() == 0) {
     throw std::runtime_error{"No records"};
   }
 
   TranslationUnit result{
-    .name = "",
-    .namesList = {},
-    .segments = {},
-    .exports = {},
-    .imports = {},
-    .rawBytes = std::move(rawBytes),
+      .name = "",
+      .namesList = {},
+      .segments = {},
+      .exports = {},
+      .imports = {},
+      .rawBytes = std::move(rawBytes),
   };
 
   // The first records must be a header
@@ -486,42 +492,39 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
     const auto& currentRecord = *it;
 
     switch (currentRecord.recordIdentifier) {
-     case 0x80:
-      {
+      case 0x80: {
         // THEADR
         throw std::runtime_error{"Multiple THEADR not allowed"};
       }
 
-     case 0x88:
-      {
+      case 0x88: {
         // COMENT
         CommentRecord record = parseCommentRecord(currentRecord);
         // nothing to do with a comment
         break;
       }
 
-     case 0x8a:
-      {
+      case 0x8a: {
         // MODEND
         break;
       }
 
-     case 0x8c:
-      {
+      case 0x8c: {
         // EXTDEF
         ImportRecord record = parseImportRecord(currentRecord);
-        result.imports.reserve(result.imports.size() + record.importedNames.size());
+        result.imports.reserve(
+            result.imports.size() + record.importedNames.size());
         for (const auto& n : record.importedNames) {
           result.imports.emplace_back(std::move(n));
         }
         break;
       }
 
-     case 0x90:
-      {
+      case 0x90: {
         // PUBDEF
         ExportRecord record = parseExportRecord(currentRecord);
-        result.exports.reserve(result.exports.size() + record.exportedNames.size());
+        result.exports.reserve(
+            result.exports.size() + record.exportedNames.size());
         for (const auto& n : record.exportedNames) {
           // validate segment
           if (n.segmentIndex == 0 || n.segmentIndex > result.segments.size()) {
@@ -532,8 +535,7 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
         break;
       }
 
-     case 0x96:
-      {
+      case 0x96: {
         // LNAMES
         NamesRecord record = parseNamesRecord(currentRecord);
         result.namesList.reserve(result.namesList.size() + record.names.size());
@@ -543,23 +545,21 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
         break;
       }
 
-     case 0x98:
-      {
+      case 0x98: {
         // SEGDEF
         SegmentRecord record = parseSegmentRecord(currentRecord);
         result.segments.push_back(SegmentDefinition{
-          .alignment = record.alignment,
-          .combination = record.combination,
-          .bitField = record.bitField,
-          .segmentLength = record.segmentLength,
-          .segmentName = lookupName(result, record.segmentNameIndex),
-          .className = lookupName(result, record.classNameIndex),
+            .alignment = record.alignment,
+            .combination = record.combination,
+            .bitField = record.bitField,
+            .segmentLength = record.segmentLength,
+            .segmentName = lookupName(result, record.segmentNameIndex),
+            .className = lookupName(result, record.classNameIndex),
         });
         break;
       }
 
-     case 0x9c:
-      {
+      case 0x9c: {
         // FIXUPP
         FixupRecord record = parseFixupRecord(currentRecord);
         if (lastDataBlock == nullptr) {
@@ -570,31 +570,42 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
             throw std::runtime_error{"Fixup references out of bounds location"};
           }
 
-          if (r.frameThread.method == FrameThread::Method::SEGDEF
-              && (r.frameThread.index == 0 || r.frameThread.index > result.segments.size())) {
-            throw std::runtime_error{"Fixup frame referenced non-existing segment"};
+          if (r.frameThread.method == FrameThread::Method::SEGDEF &&
+              (r.frameThread.index == 0 ||
+               r.frameThread.index > result.segments.size())) {
+            throw std::runtime_error{
+                "Fixup frame referenced non-existing segment"};
           }
           if (r.frameThread.method == FrameThread::Method::GRPDEF) {
             throw std::runtime_error{"Group references not supported"};
           }
-          if (r.frameThread.method == FrameThread::Method::EXTDEF
-              && (r.frameThread.index == 0 || r.frameThread.index > result.imports.size())) {
-            throw std::runtime_error{"Fixup frame referenced non-existing external symbol"};
+          if (r.frameThread.method == FrameThread::Method::EXTDEF &&
+              (r.frameThread.index == 0 ||
+               r.frameThread.index > result.imports.size())) {
+            throw std::runtime_error{
+                "Fixup frame referenced non-existing external symbol"};
           }
 
-          if ((r.targetThread.method == TargetThread::Method::SEGDEF
-              || r.targetThread.method == TargetThread::Method::SEGDEF_ZERO_DISPLACE)
-              && (r.targetThread.index == 0 || r.targetThread.index > result.segments.size())) {
-            throw std::runtime_error{"Fixup target referenced non-existing segment"};
+          if ((r.targetThread.method == TargetThread::Method::SEGDEF ||
+               r.targetThread.method ==
+                   TargetThread::Method::SEGDEF_ZERO_DISPLACE) &&
+              (r.targetThread.index == 0 ||
+               r.targetThread.index > result.segments.size())) {
+            throw std::runtime_error{
+                "Fixup target referenced non-existing segment"};
           }
-          if (r.targetThread.method == TargetThread::Method::GRPDEF
-              || r.targetThread.method == TargetThread::Method::GRPDEF_ZERO_DISPLACE) {
+          if (r.targetThread.method == TargetThread::Method::GRPDEF ||
+              r.targetThread.method ==
+                  TargetThread::Method::GRPDEF_ZERO_DISPLACE) {
             throw std::runtime_error{"Group references not supported"};
           }
-          if ((r.targetThread.method == TargetThread::Method::EXTDEF
-              || r.targetThread.method == TargetThread::Method::EXTDEF_ZERO_DISPLACE)
-              && (r.targetThread.index == 0 || r.targetThread.index > result.imports.size())) {
-            throw std::runtime_error{"Fixup target referenced non-existing external symbol"};
+          if ((r.targetThread.method == TargetThread::Method::EXTDEF ||
+               r.targetThread.method ==
+                   TargetThread::Method::EXTDEF_ZERO_DISPLACE) &&
+              (r.targetThread.index == 0 ||
+               r.targetThread.index > result.imports.size())) {
+            throw std::runtime_error{
+                "Fixup target referenced non-existing external symbol"};
           }
 
           lastDataBlock->fixups.emplace_back(std::move(r));
@@ -602,19 +613,20 @@ TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_pt
         break;
       }
 
-     case 0xa0:
-      {
+      case 0xa0: {
         // LEDATA
         EnumeratedDataRecord record = parseEnumeratedDataRecord(currentRecord);
-        SegmentDefinition& segment = lookupSegment(result, record.data.segmentIndex);
-        lastDataBlock = &segment.dataBlocks.emplace_back(std::move(record.data));
+        SegmentDefinition& segment =
+            lookupSegment(result, record.data.segmentIndex);
+        lastDataBlock =
+            &segment.dataBlocks.emplace_back(std::move(record.data));
         break;
       }
 
-     default:
-      {
-        // std::string error = std::format("Unrecognised record identifier: {:x}", currentRecord.recordIdentifier);
-        // throw std::runtime_error{error};
+      default: {
+        // std::string error = std::format("Unrecognised record identifier:
+        // {:x}", currentRecord.recordIdentifier); throw
+        // std::runtime_error{error};
       }
     }
   }

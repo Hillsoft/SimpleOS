@@ -1,5 +1,5 @@
-#include "mystyint.hpp"
 #include "mystyio.hpp"
+#include "mystyint.hpp"
 #include "x86.hpp"
 
 namespace mysty {
@@ -113,8 +113,7 @@ void puts(const char* str) {
 void putuint(unsigned int i, unsigned int base) {
   if (i == 0) {
     putc('0');
-  }
-  else {
+  } else {
     unsigned int cur = i % base;
     unsigned int next = i / base;
     if (next > 0) {

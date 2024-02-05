@@ -9,7 +9,7 @@
 namespace omf {
 
 struct FrameThread {
-  enum class Method: uint8_t {
+  enum class Method : uint8_t {
     SEGDEF = 0,
     GRPDEF = 1,
     EXTDEF = 2,
@@ -22,7 +22,7 @@ struct FrameThread {
 };
 
 struct TargetThread {
-  enum class Method: uint8_t {
+  enum class Method : uint8_t {
     SEGDEF = 0,
     GRPDEF = 1,
     EXTDEF = 2,
@@ -69,21 +69,21 @@ struct LogicalData {
 };
 
 struct SegmentDefinition {
-  enum class Alignment: uint8_t {
+  enum class Alignment : uint8_t {
     ABSOLUTE = 0,
     RELOCATABLE_BYTE_ALIGNED = 1,
     RELOCATABLE_2BYTE_ALIGNED = 2,
     RELOCATABLE_16BYTE_ALIGNED = 3,
   };
 
-  enum class Combination: uint8_t {
+  enum class Combination : uint8_t {
     PRIVATE = 0,
     PUBLIC = 2,
     STACK = 5,
-    COMMON=6,
+    COMMON = 6,
   };
 
-  enum class BitField: uint8_t {
+  enum class BitField : uint8_t {
     BITS_16 = 0,
     BITS_32 = 1,
   };
@@ -121,7 +121,11 @@ struct TranslationUnit {
   std::unique_ptr<const uint8_t[]> rawBytes;
 };
 
-TranslationUnit decodeUnit(std::span<const uint8_t> fileContents, std::unique_ptr<const uint8_t[]> rawBytes);
-TranslationUnit decodeUnit(const std::vector<RawRecord>& records, std::unique_ptr<const uint8_t[]> rawBytes);
+TranslationUnit decodeUnit(
+    std::span<const uint8_t> fileContents,
+    std::unique_ptr<const uint8_t[]> rawBytes);
+TranslationUnit decodeUnit(
+    const std::vector<RawRecord>& records,
+    std::unique_ptr<const uint8_t[]> rawBytes);
 
 } // namespace omf

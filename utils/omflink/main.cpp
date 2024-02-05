@@ -13,7 +13,8 @@ using namespace omf;
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    std::cout << "Syntax: " << argv[0] << " <link script> <out file> <obj file>" << std::endl;
+    std::cout << "Syntax: " << argv[0] << " <link script> <out file> <obj file>"
+              << std::endl;
     return -1;
   }
 
@@ -25,12 +26,14 @@ int main(int argc, char** argv) {
   NameSet nameSet;
 
   for (int i = 3; i < argc; i++) {
-    const TranslationUnit& unit = translationUnits.emplace_back(loadUnitFromFilename(argv[i]));
+    const TranslationUnit& unit =
+        translationUnits.emplace_back(loadUnitFromFilename(argv[i]));
 
     nameSet.registerTranslationUnit(unit);
   }
 
-  std::vector<SegmentDefinition*> segmentLayout = arrangeSegments(linkScript, translationUnits);
+  std::vector<SegmentDefinition*> segmentLayout =
+      arrangeSegments(linkScript, translationUnits);
 
   if (segmentLayout.size() == 0) {
     throw std::runtime_error{"No segments to output"};
@@ -40,7 +43,8 @@ int main(int argc, char** argv) {
   for (const auto& d : segmentLayout.back()->dataBlocks) {
     outSize += d.data.size();
   }
-  std::unique_ptr<uint8_t[]> outBuffer = std::make_unique_for_overwrite<uint8_t[]>(outSize);
+  std::unique_ptr<uint8_t[]> outBuffer =
+      std::make_unique_for_overwrite<uint8_t[]>(outSize);
   // 0 this as we will not fill padding later
   std::memset(outBuffer.get(), 0, outSize);
 
@@ -49,7 +53,9 @@ int main(int argc, char** argv) {
   }
 
   std::ofstream outFile{argv[2], std::ios::out | std::ios::binary};
-  outFile.write(reinterpret_cast<char*>(outBuffer.get()), static_cast<std::streamsize>(outSize));
+  outFile.write(
+      reinterpret_cast<char*>(outBuffer.get()),
+      static_cast<std::streamsize>(outSize));
 
   return 0;
 }

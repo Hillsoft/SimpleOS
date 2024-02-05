@@ -19,9 +19,10 @@ void NameSet::registerTranslationUnit(const TranslationUnit& unit) {
       // throw std::runtime_error{error};
     }
 
-    names.emplace(std::piecewise_construct,
-      std::forward_as_tuple(n.name),
-      std::forward_as_tuple(unit.segments[n.segmentIndex - 1], n.offset));
+    names.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(n.name),
+        std::forward_as_tuple(unit.segments[n.segmentIndex - 1], n.offset));
   }
 }
 
@@ -35,4 +36,4 @@ std::optional<GlobalName> NameSet::lookupName(std::string_view name) const {
   return it->second;
 }
 
-} // namespace
+} // namespace omf

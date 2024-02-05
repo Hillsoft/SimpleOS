@@ -24,4 +24,4 @@ class NameSet final {
   std::unordered_map<std::string_view, GlobalName> names;
 };
 
-} // namespace
+} // namespace omf

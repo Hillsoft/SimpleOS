@@ -1,6 +1,7 @@
 #include "mystyint.hpp"
 
-// This won't generate anything useful, but verifies our sizes in mystyint are correct
+// This won't generate anything useful, but verifies our sizes in mystyint are
+// correct
 
 static_assert(sizeof(uint8_t) == 1);
 static_assert(sizeof(uint16_t) == 2);

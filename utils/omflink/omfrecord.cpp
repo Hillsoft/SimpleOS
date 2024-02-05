@@ -24,7 +24,8 @@ bool verifyChecksum(const RawRecord& record) {
 
 } // namespace
 
-std::vector<RawRecord> extractRawRecords(std::span<const uint8_t> fileContents) {
+std::vector<RawRecord> extractRawRecords(
+    std::span<const uint8_t> fileContents) {
   std::vector<RawRecord> result;
 
   while (fileContents.size() > 0) {
@@ -34,7 +35,8 @@ std::vector<RawRecord> extractRawRecords(std::span<const uint8_t> fileContents) 
 
     RawRecord currentRecord;
     currentRecord.recordIdentifier = fileContents[0];
-    currentRecord.recordLength = *reinterpret_cast<const uint16_t*>(fileContents.data() + 1);
+    currentRecord.recordLength =
+        *reinterpret_cast<const uint16_t*>(fileContents.data() + 1);
 
     if (currentRecord.recordLength == 0) {
       throw std::runtime_error{"Undersized record"};
@@ -48,7 +50,9 @@ std::vector<RawRecord> extractRawRecords(std::span<const uint8_t> fileContents) 
       throw std::runtime_error{"Incomplete record"};
     }
 
-    currentRecord.recordContents = std::span<const uint8_t>{fileContents.begin() + 3, static_cast<uint16_t>(currentRecord.recordLength - 1)};
+    currentRecord.recordContents = std::span<const uint8_t>{
+        fileContents.begin() + 3,
+        static_cast<uint16_t>(currentRecord.recordLength - 1)};
     currentRecord.checksum = fileContents[currentRecord.recordLength + 2];
 
     if (!verifyChecksum(currentRecord)) {

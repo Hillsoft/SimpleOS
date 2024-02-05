@@ -6,4 +6,4 @@ namespace omf {
 
 TranslationUnit loadUnitFromFilename(const char* filename);
 
-} // omf
+} // namespace omf

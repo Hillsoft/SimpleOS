@@ -4,7 +4,7 @@
 
 namespace mysty {
 
-template <typename T, uint32_t size>
+template <typename T, uint32_t size_>
 class FixedArray {
  private:
   template <typename IT, typename IArr>
@@ -35,7 +35,7 @@ class FixedArray {
   FixedArray() {}
 
   FixedArray(const T& defaultVal) {
-    for (int i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < size_; i++) {
       data[i] = defaultVal;
     }
   }
@@ -44,6 +44,8 @@ class FixedArray {
   FixedArray(Args... args) {
     initializeFromPack<0>(args...);
   }
+
+  uint32_t size() const { return size_; }
 
   T& at(uint32_t i) { return data[i]; }
   const T& at(uint32_t i) const { return data[i]; }
@@ -54,23 +56,25 @@ class FixedArray {
   iterator_t begin() { return iterator_t{*this, 0}; }
   const_iterator_t begin() const { return const_iterator_t{*this, 0}; }
 
-  iterator_t end() { return iterator_t{*this, size}; }
-  const_iterator_t end() const { return const_iterator_t{*this, size}; }
+  iterator_t end() { return iterator_t{*this, size_}; }
+  const_iterator_t end() const { return const_iterator_t{*this, size_}; }
 
  private:
   template <uint32_t i, typename Arg, typename... Args>
   void initializeFromPack(Arg a, Args... args) {
-    static_assert(i < size, "Too many arguments used to initialize FixedArray");
+    static_assert(
+        i < size_, "Too many arguments used to initialize FixedArray");
     data[i] = a;
     initializeFromPack<i + 1>(args...);
   }
 
   template <uint32_t i>
   void initializeFromPack() {
-    static_assert(i == size, "Too few arguments used to initialize FixedArray");
+    static_assert(
+        i == size_, "Too few arguments used to initialize FixedArray");
   }
 
-  T data[size];
+  T data[size_];
 };
 
 template <typename T>
@@ -87,6 +91,8 @@ class FixedArray<T, 0> {
   };
 
  public:
+  uint32_t size() const { return 0; }
+
   NullIterator begin() const { return NullIterator{}; }
   NullIterator end() const { return NullIterator{}; }
 };

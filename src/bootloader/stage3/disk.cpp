@@ -164,23 +164,23 @@ bool executeDriveControllerCommandSingleAttempt(
   }
 
   // Result phase
-  while (status = MainStatusRegisterBitset::loadFromController(),
-         !status.getRQM()) {
-  }
-  if (!status.getDIO()) {
-    return false;
-  }
-
-  bool first = true;
-  for (auto& outByte : outBytes) {
+  if (outBytes.size() > 0) {
     while (status = MainStatusRegisterBitset::loadFromController(),
-           !first && status.getRQM()) {
+           !status.getRQM()) {
     }
-    if (!status.getDIO() || !status.getCB()) {
+    if (!status.getDIO()) {
       return false;
     }
-    outByte = x86_inb(FloppyRegister::DATA_FIFO);
-    first = false;
+
+    for (auto& outByte : outBytes) {
+      while (status = MainStatusRegisterBitset::loadFromController(),
+             !status.getRQM()) {
+      }
+      if (!status.getDIO() || !status.getCB()) {
+        return false;
+      }
+      outByte = x86_inb(FloppyRegister::DATA_FIFO);
+    }
   }
 
   status = MainStatusRegisterBitset::loadFromController();

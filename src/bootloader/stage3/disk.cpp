@@ -226,18 +226,97 @@ mysty::Optional<uint8_t> getDriveControllerVersion() {
   return mysty::Optional<uint8_t>{};
 }
 
-void configureDriveController(
+bool configureDriveController(
     bool impliedSeekEnable,
     bool fifoEnable,
     bool pollingEnable,
     uint8_t threshold,
     uint8_t precompensation) {
-  x86_outb(FloppyRegister::DATA_FIFO, FloppyCommand::CONFIGURE);
+  mysty::FixedArray<uint8_t, 3> input{
+      0,
+      (impliedSeekEnable << 6) | (!fifoEnable << 5) | (!pollingEnable << 4) |
+          threshold,
+      precompensation};
+  mysty::FixedArray<uint8_t, 0> output;
+  mysty::FixedArray<uint8_t, 0> buffer;
+
+  return executeDriveControllerCommand(
+      FloppyCommand::CONFIGURE, input, output, buffer);
+}
+
+bool unlockDriveController() {
+  mysty::FixedArray<uint8_t, 0> input;
+  mysty::FixedArray<uint8_t, 1> output;
+  mysty::FixedArray<uint8_t, 0> buffer;
+
+  if (!executeDriveControllerCommand(
+          FloppyCommand::LOCK, input, output, buffer)) {
+    return false;
+  }
+
+  return output[0] == 0;
+}
+
+bool lockDriveController() {
+  mysty::FixedArray<uint8_t, 0> input;
+  mysty::FixedArray<uint8_t, 1> output;
+  mysty::FixedArray<uint8_t, 0> buffer;
+
+  if (!executeDriveControllerCommand(
+          static_cast<FloppyCommand>(0x80u | FloppyCommand::LOCK),
+          input,
+          output,
+          buffer)) {
+    return false;
+  }
+
+  return output[0] == (0x1 << 4);
+}
+
+bool recalibrate() {
+  mysty::FixedArray<uint8_t, 1> input{g_currentDrive};
+  mysty::FixedArray<uint8_t, 0> output;
+  mysty::FixedArray<uint8_t, 0> buffer;
+
+  if (!executeDriveControllerCommand(
+          FloppyCommand::RECALIBRATE, input, output, buffer)) {
+    return false;
+  }
+
+  // Poll until head movement is finished
+  while (MainStatusRegisterBitset::loadFromController().isDriveSeeking(
+      g_currentDrive)) {
+  }
+
+  mysty::FixedArray<uint8_t, 0> senseInput;
+  mysty::FixedArray<uint8_t, 2> senseOutput;
+  mysty::FixedArray<uint8_t, 0> senseBuffer;
+
+  if (!executeDriveControllerCommand(
+          FloppyCommand::SENSE_INTERRUPT,
+          senseInput,
+          senseOutput,
+          senseBuffer)) {
+    return false;
+  }
+
+  if (senseOutput[0] != (0x20 | g_currentDrive)) {
+    return false;
+  }
+
+  if (senseOutput[1] != 0) {
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace
 
 bool initialize(uint8_t driveNumber) {
+  // We will reset later which sends this to the controller
+  g_currentDrive = driveNumber;
+
   mysty::Optional<uint8_t> version = getDriveControllerVersion();
   if (!version.has_value()) {
     mysty::puts("Failed to get floppy controller version\n");
@@ -248,8 +327,26 @@ bool initialize(uint8_t driveNumber) {
     return false;
   }
 
-  // Not implemented
-  return false;
+  unlockDriveController();
+
+  if (!configureDriveController(true, true, false, 8, 0)) {
+    mysty::puts("Failed to configure floppy controller\n");
+    return false;
+  }
+
+  if (!lockDriveController()) {
+    mysty::puts("Failed to lock floppy controller\n");
+    return false;
+  }
+
+  resetDriveController();
+
+  if (!recalibrate()) {
+    mysty::puts("Failed to recalibrate floppy\n");
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace simpleos::disk

@@ -120,7 +120,10 @@ bool executeDriveControllerCommandSingleAttempt(
     FloppyCommand command,
     const InputContainer& inputParameters,
     OutputContainer& outBytes,
-    BufferContainer& buffer) {
+    BufferContainer& buffer,
+    size_t& bytesReadToBuffer) {
+  bytesReadToBuffer = 0;
+
   MainStatusRegisterBitset status =
       MainStatusRegisterBitset::loadFromController();
 
@@ -146,23 +149,21 @@ bool executeDriveControllerCommandSingleAttempt(
   // Check if the current command has an execution phase
   status = MainStatusRegisterBitset::loadFromController();
   auto bufferIt = buffer.begin();
-  while (status.getNDMA()) {
+  while (status.getNDMA() && bufferIt != buffer.end()) {
     // We do have an execution phase
     while (status = MainStatusRegisterBitset::loadFromController(),
            !status.getRQM()) {
     }
 
     while (status = MainStatusRegisterBitset::loadFromController(),
-           status.getRQM() && status.getNDMA()) {
+           status.getRQM() && status.getNDMA() && bufferIt != buffer.end()) {
+      *bufferIt = x86_inb(FloppyRegister::DATA_FIFO);
+      ++bufferIt;
+      ++bytesReadToBuffer;
     }
-
-    if (bufferIt == buffer.end()) {
-      return false;
-    }
-
-    *bufferIt = x86_inb(FloppyRegister::DATA_FIFO);
-    ++bufferIt;
   }
+
+  // TODO: wait for IRQ6
 
   // Result phase
   if (outBytes.size() > 0) {
@@ -200,11 +201,33 @@ bool executeDriveControllerCommand(
     FloppyCommand command,
     const InputContainer& inputParameters,
     OutputContainer& outBytes,
-    BufferContainer& buffer) {
+    BufferContainer& buffer,
+    size_t& bytesReadToBuffer) {
   // Try up to three times
   for (int i = 0; i < 3; i++) {
     if (executeDriveControllerCommandSingleAttempt(
-            command, inputParameters, outBytes, buffer)) {
+            command, inputParameters, outBytes, buffer, bytesReadToBuffer)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+template <
+    mysty::ConstIterable<uint8_t> InputContainer,
+    mysty::Iterable<uint8_t> OutputContainer,
+    mysty::Iterable<uint8_t> BufferContainer>
+bool executeDriveControllerCommand(
+    FloppyCommand command,
+    const InputContainer& inputParameters,
+    OutputContainer& outBytes,
+    BufferContainer& buffer) {
+  size_t bytesReadToBuffer;
+  // Try up to three times
+  for (int i = 0; i < 3; i++) {
+    if (executeDriveControllerCommandSingleAttempt(
+            command, inputParameters, outBytes, buffer, bytesReadToBuffer)) {
       return true;
     }
   }
@@ -348,6 +371,43 @@ bool initialize(uint8_t driveNumber) {
   }
 
   return true;
+}
+
+size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer) {
+  CHS chsAddress = CHS::fromLBA(lba);
+
+  mysty::FixedArray<uint8_t, 8> input{
+      (chsAddress.head << 2) | g_currentDrive,
+      chsAddress.cylinder,
+      chsAddress.head,
+      chsAddress.sector,
+      2,
+      kSectorsPerTrack,
+      0x1b,
+      0xff};
+  mysty::FixedArray<uint8_t, 7> output;
+
+  size_t bytesRead;
+  if (!executeDriveControllerCommand(
+          static_cast<FloppyCommand>(0x80 | 0x40 | FloppyCommand::READ_DATA),
+          input,
+          output,
+          outBuffer,
+          bytesRead)) {
+    return 0;
+  }
+
+  if ((output[0] | 0xC0) > 0) {
+    return 0;
+  }
+  if (output[1] > 0) {
+    return 0;
+  }
+  if (output[2] > 0) {
+    return 0;
+  }
+
+  return bytesRead;
 }
 
 } // namespace simpleos::disk

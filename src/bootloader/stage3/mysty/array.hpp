@@ -1,10 +1,12 @@
 #pragma once
 
 #include "mysty/int.hpp"
+#include "mysty/typeattributes.hpp"
 
 namespace mysty {
 
 template <typename T, uint32_t size_>
+  requires is_not_const<T>
 class FixedArray {
  private:
   template <typename IT, typename IArr>
@@ -80,6 +82,7 @@ class FixedArray {
 };
 
 template <typename T>
+  requires is_not_const<T>
 class FixedArray<T, 0> {
  private:
   template <typename IT>

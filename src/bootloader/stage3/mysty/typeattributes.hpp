@@ -20,4 +20,13 @@ struct is_convertible_t {
   constexpr static bool value = __is_convertible(T, U);
 };
 
+template <typename T>
+using is_const_t = is_same_t<T, const T>;
+
+template <typename T>
+concept is_const = is_const_t<T>::value;
+
+template <typename T>
+concept is_not_const = !is_const_t<T>::value;
+
 } // namespace mysty

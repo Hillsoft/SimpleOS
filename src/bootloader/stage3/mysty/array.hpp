@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mystyint.hpp"
+#include "mysty/int.hpp"
 
 namespace mysty {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mystytypeattributes.hpp"
+#include "mysty/typeattributes.hpp"
 
 namespace mysty {
 

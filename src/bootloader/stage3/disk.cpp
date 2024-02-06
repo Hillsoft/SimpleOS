@@ -1,8 +1,8 @@
 #include "disk.hpp"
 
-#include "mystyarray.hpp"
-#include "mystyio.hpp"
-#include "mystyoptional.hpp"
+#include "mysty/array.hpp"
+#include "mysty/io.hpp"
+#include "mysty/optional.hpp"
 #include "x86.hpp"
 
 namespace simpleos::disk {

@@ -1,4 +1,4 @@
-#include "mystyint.hpp"
+#include "mysty/int.hpp"
 
 // This won't generate anything useful, but verifies our sizes in mystyint are
 // correct

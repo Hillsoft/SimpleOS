@@ -1,5 +1,5 @@
-#include "mystyio.hpp"
-#include "mystyint.hpp"
+#include "mysty/io.hpp"
+#include "mysty/int.hpp"
 #include "x86.hpp"
 
 namespace mysty {

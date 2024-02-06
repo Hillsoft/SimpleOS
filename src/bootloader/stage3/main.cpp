@@ -1,8 +1,8 @@
 #include "main.hpp"
 
 #include "disk.hpp"
-#include "mystyint.hpp"
-#include "mystyio.hpp"
+#include "mysty/int.hpp"
+#include "mysty/io.hpp"
 
 extern "C" {
 

@@ -30,6 +30,6 @@ concept ConstIterable = requires(TIterable const& container) {
       same_as<TValue const, typename TIterable::const_iterator_t::value_t>);
   { container.begin() } -> same_as<typename TIterable::const_iterator_t>;
   { container.end() } -> same_as<typename TIterable::const_iterator_t>;
-};
+} || Iterable<TIterable, TValue const>;
 
 } // namespace mysty

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mysty/int.hpp"
+#include "mysty/span.hpp"
 #include "mysty/typeattributes.hpp"
 
 namespace mysty {
@@ -63,6 +64,9 @@ class FixedArray {
   iterator_t end() { return iterator_t{*this, size_}; }
   const_iterator_t end() const { return const_iterator_t{*this, size_}; }
 
+  operator Span<T>() { return Span<T>{data, data + size_}; }
+  operator Span<T const>() const { return Span<T const>{data, data + size_}; }
+
  private:
   template <size_t i, typename Arg, typename... Args>
   void initializeFromPack(Arg a, Args... args) {
@@ -109,6 +113,9 @@ class FixedArray<T, 0> {
 
   const_iterator_t begin() const { return const_iterator_t{}; }
   const_iterator_t end() const { return const_iterator_t{}; }
+
+  operator Span<T>() { return Span<T>{}; }
+  operator Span<T const>() const { return Span<T const>{}; }
 };
 
 } // namespace mysty

@@ -10,6 +10,8 @@ class FixedArray {
   template <typename IT, typename IArr>
   class Iterator {
    public:
+    using value_t = IT;
+
     Iterator(IArr& array, uint32_t index) : array_(array), index_(index) {}
 
     bool operator==(Iterator const& other) const {
@@ -80,21 +82,30 @@ class FixedArray {
 template <typename T>
 class FixedArray<T, 0> {
  private:
+  template <typename IT>
   class NullIterator {
    public:
+    using value_t = IT;
+
     bool operator==(NullIterator const& other) { return true; }
     bool operator!=(NullIterator const& other) { return false; }
 
-    T& operator*() const { __builtin_unreachable(); }
+    IT& operator*() const { __builtin_unreachable(); }
 
     NullIterator const& operator++() { return *this; }
   };
 
  public:
+  using iterator_t = NullIterator<T>;
+  using const_iterator_t = NullIterator<const T>;
+
   uint32_t size() const { return 0; }
 
-  NullIterator begin() const { return NullIterator{}; }
-  NullIterator end() const { return NullIterator{}; }
+  iterator_t begin() { return iterator_t{}; }
+  iterator_t end() { return iterator_t{}; }
+
+  const_iterator_t begin() const { return const_iterator_t{}; }
+  const_iterator_t end() const { return const_iterator_t{}; }
 };
 
 } // namespace mysty

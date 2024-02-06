@@ -13,6 +13,9 @@ struct is_same_t<T, T> {
 };
 
 template <typename T, typename U>
+concept same_as = is_same_t<T, U>::value;
+
+template <typename T, typename U>
 struct is_convertible_t {
   constexpr static bool value = __is_convertible(T, U);
 };

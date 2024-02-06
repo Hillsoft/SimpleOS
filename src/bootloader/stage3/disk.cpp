@@ -1,6 +1,7 @@
 #include "disk.hpp"
 
 #include "mysty/array.hpp"
+#include "mysty/concepts/iterable.hpp"
 #include "mysty/io.hpp"
 #include "mysty/optional.hpp"
 #include "x86.hpp"
@@ -112,14 +113,14 @@ void resetDriveController() {
 }
 
 template <
-    uint32_t inputParameterCount,
-    uint32_t outputByteCount,
-    uint32_t bufferSize>
+    mysty::ConstIterable<uint8_t> InputContainer,
+    mysty::Iterable<uint8_t> OutputContainer,
+    mysty::Iterable<uint8_t> BufferContainer>
 bool executeDriveControllerCommandSingleAttempt(
     FloppyCommand command,
-    const mysty::FixedArray<uint8_t, inputParameterCount>& inputParameters,
-    mysty::FixedArray<uint8_t, outputByteCount>& outBytes,
-    mysty::FixedArray<uint8_t, bufferSize>& buffer) {
+    const InputContainer& inputParameters,
+    OutputContainer& outBytes,
+    BufferContainer& buffer) {
   MainStatusRegisterBitset status =
       MainStatusRegisterBitset::loadFromController();
 
@@ -192,14 +193,14 @@ bool executeDriveControllerCommandSingleAttempt(
 }
 
 template <
-    uint32_t inputParameterCount,
-    uint32_t outputByteCount,
-    uint32_t bufferSize>
+    mysty::ConstIterable<uint8_t> InputContainer,
+    mysty::Iterable<uint8_t> OutputContainer,
+    mysty::Iterable<uint8_t> BufferContainer>
 bool executeDriveControllerCommand(
     FloppyCommand command,
-    const mysty::FixedArray<uint8_t, inputParameterCount>& inputParameters,
-    mysty::FixedArray<uint8_t, outputByteCount>& outBytes,
-    mysty::FixedArray<uint8_t, bufferSize>& buffer) {
+    const InputContainer& inputParameters,
+    OutputContainer& outBytes,
+    BufferContainer& buffer) {
   // Try up to three times
   for (int i = 0; i < 3; i++) {
     if (executeDriveControllerCommandSingleAttempt(

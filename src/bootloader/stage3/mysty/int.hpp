@@ -9,3 +9,5 @@ using int8_t = char;
 using int16_t = short;
 using int32_t = long;
 using int64_t = long long;
+
+using size_t = uint32_t;

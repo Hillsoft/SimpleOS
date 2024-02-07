@@ -1,6 +1,7 @@
 #include "init.hpp"
 
 #include "disk.hpp"
+#include "fat.hpp"
 #include "interrupts.hpp"
 #include "mysty/io.hpp"
 
@@ -17,6 +18,12 @@ bool initialize(uint8_t bootDrive) {
   if (!simpleos::disk::initialize(bootDrive)) {
     mysty::printf(
         "Failed to initialize floppy driver using disk %u\n", bootDrive);
+    return false;
+  }
+
+  mysty::puts("  File system...\n");
+  if (!initializeFileSystem()) {
+    mysty::puts("Failed to initialise file system\n");
     return false;
   }
 

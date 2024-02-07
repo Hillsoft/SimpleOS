@@ -40,14 +40,14 @@ class FixedArray {
 
   constexpr FixedArray() {}
 
-  constexpr FixedArray(const T& defaultVal) {
+  explicit constexpr FixedArray(const T& defaultVal) {
     for (size_t i = 0; i < size_; i++) {
       data[i] = defaultVal;
     }
   }
 
   template <typename... Args>
-  constexpr FixedArray(Args... args) {
+  explicit constexpr FixedArray(Args... args) {
     initializeFromPack<0>(args...);
   }
 

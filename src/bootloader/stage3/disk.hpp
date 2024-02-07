@@ -9,4 +9,9 @@ bool initialize(uint8_t driveNumber);
 
 size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer);
 
+extern "C" {
+__attribute__((interrupt)) void floppyInterruptHandlerWrapper(void*);
+__attribute__((cdecl)) void floppyInterruptHandler();
+}
+
 } // namespace simpleos::disk

@@ -1,5 +1,6 @@
 #include "disk.hpp"
 
+#include "interrupts.hpp"
 #include "mysty/array.hpp"
 #include "mysty/concepts/iterable.hpp"
 #include "mysty/io.hpp"
@@ -10,6 +11,7 @@ namespace simpleos::disk {
 
 namespace {
 
+constinit volatile bool g_hasIRQ6 = false;
 constinit bool g_hasConfiguredDriveController = false;
 constinit uint8_t g_currentDrive = 0;
 
@@ -156,14 +158,20 @@ bool executeDriveControllerCommandSingleAttempt(
     }
 
     while (status = MainStatusRegisterBitset::loadFromController(),
-           status.getRQM() && status.getNDMA() && bufferIt != buffer.end()) {
-      *bufferIt = x86_inb(FloppyRegister::DATA_FIFO);
-      ++bufferIt;
-      ++bytesReadToBuffer;
+           status.getRQM() && status.getNDMA()) {
+      uint8_t curByte = x86_inb(FloppyRegister::DATA_FIFO);
+      if (bufferIt != buffer.end()) {
+        *bufferIt = curByte;
+        ++bufferIt;
+        ++bytesReadToBuffer;
+      }
     }
   }
 
-  // TODO: wait for IRQ6
+  // Await execution complete
+  while (status = MainStatusRegisterBitset::loadFromController(),
+         status.getNDMA()) {
+  }
 
   // Result phase
   if (outBytes.size() > 0) {
@@ -302,6 +310,8 @@ bool recalibrate() {
   mysty::FixedArray<uint8_t, 0> output;
   mysty::FixedArray<uint8_t, 0> buffer;
 
+  g_hasIRQ6 = false;
+
   if (!executeDriveControllerCommand(
           FloppyCommand::RECALIBRATE, input, output, buffer)) {
     return false;
@@ -310,6 +320,9 @@ bool recalibrate() {
   // Poll until head movement is finished
   while (MainStatusRegisterBitset::loadFromController().isDriveSeeking(
       g_currentDrive)) {
+  }
+
+  while (!g_hasIRQ6) {
   }
 
   mysty::FixedArray<uint8_t, 0> senseInput;
@@ -338,6 +351,8 @@ bool recalibrate() {
 } // namespace
 
 bool initialize(uint8_t driveNumber) {
+  registerInterrupt(6, floppyInterruptHandlerWrapper, InterruptType::Interrupt);
+
   // We will reset later which sends this to the controller
   g_currentDrive = driveNumber;
 
@@ -397,7 +412,7 @@ size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer) {
     return 0;
   }
 
-  if ((output[0] | 0xC0) > 0) {
+  if ((output[0] & 0xC0) > 0) {
     return 0;
   }
   if (output[1] > 0) {
@@ -408,6 +423,12 @@ size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer) {
   }
 
   return bytesRead;
+}
+
+extern "C" {
+__attribute__((cdecl)) void floppyInterruptHandler() {
+  g_hasIRQ6 = true;
+}
 }
 
 } // namespace simpleos::disk

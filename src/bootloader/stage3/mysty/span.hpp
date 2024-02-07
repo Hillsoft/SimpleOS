@@ -12,15 +12,15 @@ class Span {
    public:
     using value_t = T;
 
-    Iterator(T* current) : current_(current) {}
+    constexpr Iterator(T* current) : current_(current) {}
 
-    bool operator==(Iterator const& other) const {
+    constexpr bool operator==(Iterator const& other) const {
       return current_ == other.current_;
     }
 
-    T& operator*() const { return *current_; }
+    constexpr T& operator*() const { return *current_; }
 
-    Iterator const& operator++() {
+    constexpr Iterator const& operator++() {
       current_ += 1;
       return *this;
     }
@@ -32,14 +32,17 @@ class Span {
  public:
   using iterator_t = Iterator;
 
-  Span() : start_(nullptr), end_(nullptr) {}
-  Span(T* start, T* end) : start_(start), end_(end) {}
+  constexpr Span() : start_(nullptr), end_(nullptr) {}
+  constexpr Span(T* start, T* end) : start_(start), end_(end) {}
+  constexpr Span(T* start, size_t count) : start_(start), end_(start + count) {}
 
-  T& at(size_t i) const { return start_[i]; }
-  T& operator[](size_t i) const { return start_[i]; }
+  constexpr T& at(size_t i) const { return start_[i]; }
+  constexpr T& operator[](size_t i) const { return start_[i]; }
 
-  iterator_t begin() const { return iterator_t{start_}; }
-  iterator_t end() const { return iterator_t{end_}; }
+  constexpr iterator_t begin() const { return iterator_t{start_}; }
+  constexpr iterator_t end() const { return iterator_t{end_}; }
+
+  constexpr size_t size() const { return static_cast<size_t>(end_ - start_); }
 
  protected:
   T* start_;

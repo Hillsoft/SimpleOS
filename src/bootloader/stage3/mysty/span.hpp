@@ -2,6 +2,8 @@
 
 #include "mysty/concepts/iterable.hpp"
 #include "mysty/int.hpp"
+#include "mysty/string.hpp"
+#include "mysty/typeattributes.hpp"
 
 namespace mysty {
 
@@ -36,6 +38,14 @@ class Span {
   constexpr Span(T* start, T* end) : start_(start), end_(end) {}
   constexpr Span(T* start, size_t count) : start_(start), end_(start + count) {}
 
+  template <typename T2 = T>
+    requires(same_as<T, char*>)
+  constexpr Span(char* c) : Span(c, strlen(c)) {}
+
+  template <typename T2 = T>
+    requires(same_as<T, const char*>)
+  constexpr Span(const char* c) : Span(c, strlen(c)) {}
+
   constexpr T& at(size_t i) const { return start_[i]; }
   constexpr T& operator[](size_t i) const { return start_[i]; }
 
@@ -48,5 +58,7 @@ class Span {
   T* start_;
   T* end_;
 };
+
+using StringView = Span<const char*>;
 
 } // namespace mysty

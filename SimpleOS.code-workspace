@@ -86,6 +86,9 @@
 			"regex": "cpp"
 		},
 		"C_Cpp.codeAnalysis.clangTidy.enabled": true,
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
+		"C_Cpp.codeAnalysis.clangTidy.args": [
+			"--extra-arg=--target=i686"
+		]
 	}
 }

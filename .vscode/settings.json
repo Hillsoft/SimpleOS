@@ -1,5 +1,5 @@
 {
-  "C_Cpp.default.intelliSenseMode": "gcc-x64",
+  "C_Cpp.default.intelliSenseMode": "gcc-x86",
   "C_Cpp.default.compilerPath": "toolchain/i686-elf/bin/i686-elf-g++",
   "C_Cpp.default.cppStandard": "c++20",
   "files.associations": {
@@ -99,5 +99,8 @@
     "stop_token": "cpp",
     "streambuf": "cpp",
     "cinttypes": "cpp"
-  }
+  },
+  "C_Cpp.default.defines": [
+    "__INTELLISENSE__"
+  ]
 }

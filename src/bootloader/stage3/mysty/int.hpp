@@ -10,4 +10,12 @@ using int16_t = short;
 using int32_t = long;
 using int64_t = long long;
 
-using size_t = uint32_t;
+#ifdef __INTELLISENSE__
+using size_t = unsigned int;
+#elif defined __clang__
+using size_t = unsigned int;
+#elif defined __SIZE_TYPE__
+using size_t = __SIZE_TYPE__;
+#else
+using size_t = unsigned int;
+#endif

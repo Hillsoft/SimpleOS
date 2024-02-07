@@ -71,7 +71,19 @@
 			"thread": "cpp",
 			"cinttypes": "cpp",
 			"variant": "cpp",
-			"bitset": "cpp"
+			"bitset": "cpp",
+			"hash_map": "cpp",
+			"hash_set": "cpp",
+			"forward_list": "cpp",
+			"unordered_set": "cpp",
+			"internet": "cpp",
+			"io_context": "cpp",
+			"rope": "cpp",
+			"slist": "cpp",
+			"ranges": "cpp",
+			"stacktrace": "cpp",
+			"valarray": "cpp",
+			"regex": "cpp"
 		},
 		"C_Cpp.codeAnalysis.clangTidy.enabled": true,
 		"editor.formatOnSave": true

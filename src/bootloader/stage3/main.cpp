@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include "disk.hpp"
+#include "interrupts.hpp"
 #include "mysty/array.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
@@ -10,6 +11,9 @@ extern "C" {
 void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
   mysty::clrscr();
   mysty::puts("Hello, from cstart!\n");
+
+  simpleos::initializeInterrupts();
+
   if (!simpleos::disk::initialize(bootDrive)) {
     mysty::printf(
         "Failed to initialize floppy driver using disk %u\n", bootDrive);

@@ -103,10 +103,9 @@ void putc(char c) {
   setcursor(g_screenX, g_screenY);
 }
 
-void puts(const char* str) {
-  while (*str != 0) {
-    putc(*str);
-    str++;
+void puts(StringView str) {
+  for (const auto& c : str) {
+    putc(c);
   }
 }
 

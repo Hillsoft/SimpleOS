@@ -1,12 +1,13 @@
 #pragma once
 
+#include "mysty/span.hpp"
 #include "mysty/typeattributes.hpp"
 
 namespace mysty {
 
 void clrscr();
 void putc(char c);
-void puts(const char* str);
+void puts(StringView str);
 void putuint(unsigned int i, unsigned int base = 10);
 void putint(int i, unsigned int base = 10);
 

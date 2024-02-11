@@ -29,6 +29,8 @@ class Span {
       return *this;
     }
 
+    constexpr operator T*() const { return current_; }
+
    protected:
     T* current_;
   };
@@ -86,6 +88,11 @@ class Span {
       }
     }
     return {};
+  }
+
+  template <typename T2>
+  constexpr Span<T2> reinterpret() const {
+    return Span<T2>{reinterpret_cast<T2*>(start_), reinterpret_cast<T2*>(end_)};
   }
 
  protected:

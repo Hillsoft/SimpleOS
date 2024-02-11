@@ -202,8 +202,8 @@ File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
         kBytesPerSector - static_cast<size_t>(positionInSector), bytesToRead);
 
     mysty::memcpy(
-        &*bufferOut.begin(),
-        &file.buffer.at(positionInSector),
+        bufferOut.begin(),
+        file.buffer.begin() + positionInSector,
         currentBytesToRead);
 
     bufferOut = bufferOut.slice_front(currentBytesToRead);
@@ -218,8 +218,7 @@ File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
 
     size_t currentBytesToRead = mysty::min(kBytesPerSector, bytesToRead);
 
-    mysty::memcpy(
-        &*bufferOut.begin(), &*file.buffer.begin(), currentBytesToRead);
+    mysty::memcpy(bufferOut.begin(), file.buffer.begin(), currentBytesToRead);
 
     bufferOut = bufferOut.slice_front(currentBytesToRead);
     file.position += currentBytesToRead;

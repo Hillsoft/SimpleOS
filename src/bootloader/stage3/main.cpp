@@ -33,9 +33,9 @@ void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
       return;
     }
 
-    for (size_t i = 0; i < mysty::min(readBuffer.size(), remaining); i++) {
-      mysty::putc(static_cast<char>(readBuffer[i]));
-    }
+    mysty::puts(static_cast<mysty::Span<uint8_t>>(readBuffer)
+                    .reinterpret<const char>()
+                    .slice_front(0, remaining));
   }
 
   mysty::putc('\n');

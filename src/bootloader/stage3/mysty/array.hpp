@@ -29,6 +29,8 @@ class FixedArray {
       return *this;
     }
 
+    constexpr operator IT*() const { return &array_[index_]; }
+
    protected:
     IArr& array_;
     size_t index_;

@@ -8,8 +8,19 @@ namespace simpleos {
 
 class File {
  public:
+  enum class ReadResult {
+    OK,
+    REACHED_END,
+    FAILED,
+  };
+
   ~File();
 
+  size_t remainingBytes() const;
+  size_t position() const;
+  size_t size() const;
+
+  ReadResult read(mysty::Span<uint8_t> outBuffer);
   void close();
 
  private:

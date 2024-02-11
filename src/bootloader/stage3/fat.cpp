@@ -5,6 +5,7 @@
 #include "mysty/array.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
+#include "mysty/memory.hpp"
 #include "mysty/new.hpp"
 #include "mysty/span.hpp"
 
@@ -70,6 +71,10 @@ BootSector g_bootSector;
 constinit mysty::Span<uint8_t> g_fat;
 mysty::FixedArray<FileData, kMaxOpenFiles>* g_openFiles;
 uint32_t g_rootDirectoryEnd;
+
+uint32_t clusterToLBA(uint32_t cluster) {
+  return g_rootDirectoryEnd + (cluster - 2) * g_bootSector.sectorsPerCluster;
+}
 
 bool readBootSector() {
   mysty::Span<uint8_t> bootSectorBytes{
@@ -153,12 +158,89 @@ DirectoryEntry* findFileInRootDirectory(mysty::StringView fileName) {
   return nullptr;
 }
 
-void closeFile(uint8_t handle) {
-  g_openFiles->at(handle).isOpen = false;
+uint32_t advanceCluster(uint32_t cluster) {
+  uint32_t fatIndex = cluster * 3 / 2;
+
+  if (cluster % 2 == 0) {
+    return *reinterpret_cast<uint16_t*>(&g_fat[fatIndex]) & 0x0FFF;
+  } else {
+    return *reinterpret_cast<uint16_t*>(&g_fat[fatIndex]) >> 4;
+  }
 }
 
-uint32_t clusterToLBA(uint32_t cluster) {
-  return g_rootDirectoryEnd + (cluster - 2) * g_bootSector.sectorsPerCluster;
+bool advanceFileBuffer(FileData& file) {
+  ++file.currentSectorInCluster;
+
+  if (file.currentSectorInCluster >= g_bootSector.sectorsPerCluster) {
+    file.currentSectorInCluster = 0;
+
+    file.currentCluster = advanceCluster(file.currentCluster);
+  }
+
+  if (file.currentCluster >= 0x0FF8) {
+    return false;
+  }
+
+  uint32_t lba =
+      clusterToLBA(file.currentCluster) + file.currentSectorInCluster;
+
+  return disk::read(lba, file.buffer);
+}
+
+File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
+  if (bufferOut.size() == 0) {
+    return File::ReadResult::OK;
+  }
+
+  FileData& file = g_openFiles->at(handle);
+  size_t bytesToRead = mysty::min(
+      static_cast<size_t>(file.size - file.position), bufferOut.size());
+
+  {
+    uint32_t positionInSector = file.position % kBytesPerSector;
+    size_t currentBytesToRead = mysty::min(
+        kBytesPerSector - static_cast<size_t>(positionInSector), bytesToRead);
+
+    mysty::memcpy(
+        &*bufferOut.begin(),
+        &file.buffer.at(positionInSector),
+        currentBytesToRead);
+
+    bufferOut = bufferOut.slice_front(currentBytesToRead);
+    file.position += currentBytesToRead;
+    bytesToRead -= currentBytesToRead;
+  }
+
+  while (bytesToRead > 0) {
+    if (!advanceFileBuffer(file)) {
+      return File::ReadResult::FAILED;
+    }
+
+    size_t currentBytesToRead = mysty::min(kBytesPerSector, bytesToRead);
+
+    mysty::memcpy(
+        &*bufferOut.begin(), &*file.buffer.begin(), currentBytesToRead);
+
+    bufferOut = bufferOut.slice_front(currentBytesToRead);
+    file.position += currentBytesToRead;
+    bytesToRead -= currentBytesToRead;
+  }
+
+  if (file.position % kBytesPerSector == 0 && file.position < file.size) {
+    if (!advanceFileBuffer(file)) {
+      return File::ReadResult::FAILED;
+    }
+  }
+
+  if (bufferOut.size() == 0) {
+    return File::ReadResult::OK;
+  } else {
+    return File::ReadResult::REACHED_END;
+  }
+}
+
+void closeFile(uint8_t handle) {
+  g_openFiles->at(handle).isOpen = false;
 }
 
 } // namespace
@@ -250,6 +332,22 @@ File::File(uint8_t handle) : handle_(handle) {}
 
 File::~File() {
   close();
+}
+
+size_t File::remainingBytes() const {
+  return size() - position();
+}
+
+size_t File::position() const {
+  return g_openFiles->at(handle_).position;
+}
+
+size_t File::size() const {
+  return g_openFiles->at(handle_).size;
+}
+
+File::ReadResult File::read(mysty::Span<uint8_t> bufferOut) {
+  return readFile(handle_, bufferOut);
 }
 
 void File::close() {

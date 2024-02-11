@@ -1,6 +1,5 @@
 #include "main.hpp"
 
-#include "disk.hpp"
 #include "fat.hpp"
 #include "init.hpp"
 #include "mysty/array.hpp"
@@ -15,23 +14,30 @@ void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
     return;
   }
 
-  mysty::Optional<simpleos::File> badFile = simpleos::openFile("no.txt");
-  if (!badFile.has_value()) {
-    mysty::puts("Failed to open 'no.txt'\n");
-  }
-
   mysty::Optional<simpleos::File> testFile = simpleos::openFile("TEST.TXT");
   if (!testFile.has_value()) {
     mysty::puts("Failed to open 'test.txt'\n");
+    return;
   }
 
-  mysty::FixedArray<uint8_t, 512> readBuffer;
-  if (!simpleos::disk::read(0, readBuffer)) {
-    mysty::printf("Failed to read from floppy\n");
+  mysty::FixedArray<uint8_t, 100> readBuffer;
+  simpleos::File::ReadResult result = simpleos::File::ReadResult::OK;
+
+  while (result == simpleos::File::ReadResult::OK) {
+    size_t remaining = testFile->remainingBytes();
+
+    result = testFile->read(readBuffer);
+
+    if (result == simpleos::File::ReadResult::FAILED) {
+      mysty::puts("\nFailed to read file\n");
+      return;
+    }
+
+    for (size_t i = 0; i < mysty::min(readBuffer.size(), remaining); i++) {
+      mysty::putc(static_cast<char>(readBuffer[i]));
+    }
   }
-  for (size_t i = 0; i < 8; i++) {
-    mysty::putc(static_cast<char>(readBuffer[3 + i]));
-  }
+
   mysty::putc('\n');
 }
 }

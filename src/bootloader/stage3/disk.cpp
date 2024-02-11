@@ -323,6 +323,7 @@ bool recalibrate() {
   }
 
   while (!g_hasIRQ6) {
+    awaitInterrupt();
   }
 
   mysty::FixedArray<uint8_t, 0> senseInput;

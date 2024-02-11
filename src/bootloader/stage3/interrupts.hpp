@@ -15,4 +15,8 @@ void registerInterrupt(
     __attribute__((interrupt)) void (*handler)(void*),
     InterruptType type);
 
+inline void awaitInterrupt() {
+  __asm__("hlt");
+}
+
 } // namespace simpleos

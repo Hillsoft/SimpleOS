@@ -52,7 +52,7 @@ struct __attribute__((packed)) BootSector {
 };
 
 struct __attribute__((packed)) DirectoryEntry {
-  uint8_t name[11];
+  char name[11];
   uint8_t attributes;
   uint8_t reserved;
   uint8_t createdTimeTenths;
@@ -69,6 +69,7 @@ struct __attribute__((packed)) DirectoryEntry {
 BootSector g_bootSector;
 constinit mysty::Span<uint8_t> g_fat;
 mysty::FixedArray<FileData, kMaxOpenFiles>* g_openFiles;
+uint32_t g_rootDirectoryEnd;
 
 bool readBootSector() {
   mysty::Span<uint8_t> bootSectorBytes{
@@ -131,7 +132,29 @@ bool readRootDirectory() {
   g_openFiles->at(0).currentCluster = lba;
   g_openFiles->at(0).currentSectorInCluster = 0;
 
+  g_rootDirectoryEnd = lba + (size + kBytesPerSector - 1) / kBytesPerSector;
+
   return true;
+}
+
+DirectoryEntry* findFileInRootDirectory(mysty::StringView fileName) {
+  // TODO: this assumes the root directory fits in a single sector, which is not
+  // necessarily the case
+  DirectoryEntry* rootDirectoryData =
+      reinterpret_cast<DirectoryEntry*>(&g_openFiles->at(0).buffer[0]);
+  for (uint32_t i = 0; i < g_bootSector.dirEntriesCount; ++i) {
+    if (mysty::StringView{
+            rootDirectoryData[i].name, sizeof(rootDirectoryData[i].name)} ==
+        fileName) {
+      return rootDirectoryData + i;
+    }
+  }
+
+  return nullptr;
+}
+
+uint32_t clusterToLBA(uint32_t cluster) {
+  return g_rootDirectoryEnd + (cluster - 2) * g_bootSector.sectorsPerCluster;
 }
 
 } // namespace
@@ -159,5 +182,66 @@ bool initializeFileSystem() {
 
   return true;
 }
+
+mysty::Optional<File> openFile(mysty::StringView path) {
+  // For now, we assume the file is in the root directory
+  // TODO: support subdirectories
+  if (path.size() == 0) {
+    return {};
+  }
+
+  if (path[0] == '/') {
+    path.slice_front(1);
+  }
+
+  if (path.size() > 11 || path.size() < 4 || path.at(path.size() - 4) != '.') {
+    return {};
+  }
+
+  uint8_t handle = 1; // 0 is always open
+  for (; handle < g_openFiles->size(); ++handle) {
+    if (!g_openFiles->at(handle).isOpen) {
+      break;
+    }
+  }
+  if (handle == g_openFiles->size()) {
+    return {};
+  }
+  FileData& fileData = g_openFiles->at(handle);
+
+  mysty::FixedArray<char, 11> fatFileName{' '};
+
+  for (size_t i = 0; i < path.size() - 4; i++) {
+    fatFileName[i] = path[i];
+  }
+  for (size_t i = 1; i <= 3; i++) {
+    fatFileName[fatFileName.size() - i] = path[path.size() - i];
+  }
+
+  DirectoryEntry* fileEntry = findFileInRootDirectory(fatFileName);
+  if (fileEntry == nullptr) {
+    return {};
+  }
+
+  fileData.isDirectory = true;
+  fileData.position = 0;
+  fileData.size = fileEntry->size;
+  fileData.firstCluster =
+      (static_cast<uint32_t>(fileEntry->firstClusterHigh) << 16u) +
+      fileEntry->firstClusterLow;
+  fileData.currentCluster = fileData.firstCluster;
+  fileData.currentSectorInCluster = 0;
+
+  if (disk::read(clusterToLBA(fileData.currentCluster), fileData.buffer) !=
+      kBytesPerSector) {
+    return {};
+  }
+
+  fileData.isOpen = true;
+
+  return File{handle};
+}
+
+File::File(uint8_t handle) : handle_(handle) {}
 
 } // namespace simpleos

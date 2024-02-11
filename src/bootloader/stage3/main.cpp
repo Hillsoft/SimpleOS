@@ -10,13 +10,17 @@ extern "C" {
 
 void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
   if (!simpleos::initialize(bootDrive)) {
-    mysty::puts("Failed to initialise, aborting!\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to initialise, aborting!\n"};
+    mysty::puts(errorMessage);
     return;
   }
 
-  mysty::Optional<simpleos::File> testFile = simpleos::openFile("TEST.TXT");
+  constexpr mysty::StringView testFileName{"TEST.TXT"};
+  mysty::Optional<simpleos::File> testFile = simpleos::openFile(testFileName);
   if (!testFile.has_value()) {
-    mysty::puts("Failed to open 'test.txt'\n");
+    constexpr mysty::StringView errorMessage{"Failed to open 'test.txt'\n"};
+    mysty::puts(errorMessage);
     return;
   }
 
@@ -29,7 +33,8 @@ void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
     result = testFile->read(readBuffer);
 
     if (result == simpleos::File::ReadResult::FAILED) {
-      mysty::puts("\nFailed to read file\n");
+      constexpr mysty::StringView errorMessage{"\nFailed to read file\n"};
+      mysty::puts(errorMessage);
       return;
     }
 

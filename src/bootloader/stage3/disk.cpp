@@ -359,30 +359,38 @@ bool initialize(uint8_t driveNumber) {
 
   mysty::Optional<uint8_t> version = getDriveControllerVersion();
   if (!version.has_value()) {
-    mysty::puts("Failed to get floppy controller version\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to get floppy controller version\n"};
+    mysty::puts(errorMessage);
     return false;
   }
   if (*version != 0x90) {
-    mysty::puts("Unsupported floppy controller\n");
+    constexpr mysty::StringView errorMessage{"Unsupported floppy controller\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
   unlockDriveController();
 
   if (!configureDriveController(true, true, false, 8, 0)) {
-    mysty::puts("Failed to configure floppy controller\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to configure floppy controller\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
   if (!lockDriveController()) {
-    mysty::puts("Failed to lock floppy controller\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to lock floppy controller\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
   resetDriveController();
 
   if (!recalibrate()) {
-    mysty::puts("Failed to recalibrate floppy\n");
+    constexpr mysty::StringView errorMessage{"Failed to recalibrate floppy\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 

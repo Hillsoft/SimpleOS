@@ -9,25 +9,32 @@ namespace simpleos {
 
 bool initialize(uint8_t bootDrive) {
   mysty::clrscr();
-  mysty::puts("Initialising SimpleOS...\n");
+  constexpr mysty::StringView initializingMessage{"Initialising SimpleOS...\n"};
+  mysty::puts(initializingMessage);
 
-  mysty::puts("  Interrupts...\n");
+  constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
+  mysty::puts(interruptsMessage);
   simpleos::initializeInterrupts();
 
-  mysty::puts("  Floppy Disk Driver...\n");
+  constexpr mysty::StringView floppyMessage{"  Floppy Disk Driver...\n"};
+  mysty::puts(floppyMessage);
   if (!simpleos::disk::initialize(bootDrive)) {
     mysty::printf(
         "Failed to initialize floppy driver using disk %u\n", bootDrive);
     return false;
   }
 
-  mysty::puts("  File system...\n");
+  constexpr mysty::StringView fileSystemMessage{"  File system...\n"};
+  mysty::puts(fileSystemMessage);
   if (!initializeFileSystem()) {
-    mysty::puts("Failed to initialise file system\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to initialise file system\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
-  mysty::puts("Initialisation complete\n");
+  constexpr mysty::StringView completeMessage{"Initialisation complete\n"};
+  mysty::puts(completeMessage);
 
   return true;
 }

@@ -268,7 +268,8 @@ void closeFile(uint8_t handle) {
 
 bool initializeFileSystem() {
   if (!readBootSector()) {
-    mysty::puts("Failed to read boot sector\n");
+    constexpr mysty::StringView errorMessage{"Failed to read boot sector\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
@@ -278,12 +279,15 @@ bool initializeFileSystem() {
   }
 
   if (!initializeFileDataStructure()) {
-    mysty::puts("Failed to initialise FAT data structure\n");
+    constexpr mysty::StringView errorMessage{
+        "Failed to initialise FAT data structure\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 
   if (!readRootDirectory()) {
-    mysty::puts("Failed to load root directory\n");
+    constexpr mysty::StringView errorMessage{"Failed to load root directory\n"};
+    mysty::puts(errorMessage);
     return false;
   }
 

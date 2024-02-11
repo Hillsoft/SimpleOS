@@ -39,11 +39,11 @@ class Span {
   constexpr Span(T* start, size_t count) : start_(start), end_(start + count) {}
 
   template <typename T2 = T>
-    requires(same_as<T, char*>)
+    requires(same_as<T, char>)
   constexpr Span(char* c) : Span(c, strlen(c)) {}
 
   template <typename T2 = T>
-    requires(same_as<T, const char*>)
+    requires(same_as<T, const char>)
   constexpr Span(const char* c) : Span(c, strlen(c)) {}
 
   constexpr T& at(size_t i) const { return start_[i]; }
@@ -59,6 +59,6 @@ class Span {
   T* end_;
 };
 
-using StringView = Span<const char*>;
+using StringView = Span<const char>;
 
 } // namespace mysty

@@ -142,22 +142,6 @@ bool readRootDirectory() {
   return true;
 }
 
-DirectoryEntry* findFileInRootDirectory(mysty::StringView fileName) {
-  // TODO: this assumes the root directory fits in a single sector, which is not
-  // necessarily the case
-  DirectoryEntry* rootDirectoryData =
-      reinterpret_cast<DirectoryEntry*>(&g_openFiles->at(0).buffer[0]);
-  for (uint32_t i = 0; i < g_bootSector.dirEntriesCount; ++i) {
-    if (mysty::StringView{
-            rootDirectoryData[i].name, sizeof(rootDirectoryData[i].name)} ==
-        fileName) {
-      return rootDirectoryData + i;
-    }
-  }
-
-  return nullptr;
-}
-
 uint32_t advanceCluster(uint32_t cluster) {
   uint32_t fatIndex = cluster * 3 / 2;
 
@@ -168,23 +152,30 @@ uint32_t advanceCluster(uint32_t cluster) {
   }
 }
 
-bool advanceFileBuffer(FileData& file) {
-  ++file.currentSectorInCluster;
+bool advanceFileBuffer(uint8_t handle) {
+  FileData& file = g_openFiles->at(handle);
+  if (handle == 0) {
+    // Special handling for the root directory
+    ++file.currentCluster;
+    return disk::read(file.currentCluster, file.buffer);
+  } else {
+    ++file.currentSectorInCluster;
 
-  if (file.currentSectorInCluster >= g_bootSector.sectorsPerCluster) {
-    file.currentSectorInCluster = 0;
+    if (file.currentSectorInCluster >= g_bootSector.sectorsPerCluster) {
+      file.currentSectorInCluster = 0;
 
-    file.currentCluster = advanceCluster(file.currentCluster);
+      file.currentCluster = advanceCluster(file.currentCluster);
+    }
+
+    if (file.currentCluster >= 0x0FF8) {
+      return false;
+    }
+
+    uint32_t lba =
+        clusterToLBA(file.currentCluster) + file.currentSectorInCluster;
+
+    return disk::read(lba, file.buffer);
   }
-
-  if (file.currentCluster >= 0x0FF8) {
-    return false;
-  }
-
-  uint32_t lba =
-      clusterToLBA(file.currentCluster) + file.currentSectorInCluster;
-
-  return disk::read(lba, file.buffer);
 }
 
 File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
@@ -212,7 +203,7 @@ File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
   }
 
   while (bytesToRead > 0) {
-    if (!advanceFileBuffer(file)) {
+    if (!advanceFileBuffer(handle)) {
       return File::ReadResult::FAILED;
     }
 
@@ -226,7 +217,7 @@ File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
   }
 
   if (file.position % kBytesPerSector == 0 && file.position < file.size) {
-    if (!advanceFileBuffer(file)) {
+    if (!advanceFileBuffer(handle)) {
       return File::ReadResult::FAILED;
     }
   }
@@ -236,6 +227,37 @@ File::ReadResult readFile(uint8_t handle, mysty::Span<uint8_t> bufferOut) {
   } else {
     return File::ReadResult::REACHED_END;
   }
+}
+
+bool resetRootDirectory() {
+  FileData& rootDirectory = g_openFiles->at(0);
+  rootDirectory.position = 0;
+  if (rootDirectory.currentCluster != rootDirectory.firstCluster) {
+    rootDirectory.currentCluster = rootDirectory.firstCluster;
+    return disk::read(rootDirectory.currentCluster, rootDirectory.buffer);
+  }
+  return true;
+}
+
+mysty::Optional<DirectoryEntry> findFileInRootDirectory(
+    mysty::StringView fileName) {
+  if (!resetRootDirectory()) {
+    return {};
+  }
+
+  for (uint32_t i = 0; i < g_bootSector.dirEntriesCount; ++i) {
+    DirectoryEntry currentEntry;
+    readFile(
+        0,
+        mysty::Span<uint8_t>{
+            reinterpret_cast<uint8_t*>(&currentEntry), sizeof(currentEntry)});
+    if (mysty::StringView{currentEntry.name, sizeof(currentEntry.name)} ==
+        fileName) {
+      return currentEntry;
+    }
+  }
+
+  return {};
 }
 
 void closeFile(uint8_t handle) {
@@ -303,8 +325,9 @@ mysty::Optional<File> openFile(mysty::StringView path) {
     fatFileName[fatFileName.size() - i] = path[path.size() - i];
   }
 
-  DirectoryEntry* fileEntry = findFileInRootDirectory(fatFileName);
-  if (fileEntry == nullptr) {
+  mysty::Optional<DirectoryEntry> fileEntry =
+      findFileInRootDirectory(fatFileName);
+  if (!fileEntry.has_value()) {
     return {};
   }
 

@@ -153,6 +153,10 @@ DirectoryEntry* findFileInRootDirectory(mysty::StringView fileName) {
   return nullptr;
 }
 
+void closeFile(uint8_t handle) {
+  g_openFiles->at(handle).isOpen = false;
+}
+
 uint32_t clusterToLBA(uint32_t cluster) {
   return g_rootDirectoryEnd + (cluster - 2) * g_bootSector.sectorsPerCluster;
 }
@@ -243,5 +247,16 @@ mysty::Optional<File> openFile(mysty::StringView path) {
 }
 
 File::File(uint8_t handle) : handle_(handle) {}
+
+File::~File() {
+  close();
+}
+
+void File::close() {
+  if (handle_ != 255) {
+    closeFile(handle_);
+    handle_ = 255;
+  }
+}
 
 } // namespace simpleos

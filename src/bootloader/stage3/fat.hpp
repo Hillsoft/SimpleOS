@@ -8,9 +8,9 @@ namespace simpleos {
 
 class File {
  public:
-  // ~File();
+  ~File();
 
-  // void close();
+  void close();
 
  private:
   explicit File(uint8_t handle);

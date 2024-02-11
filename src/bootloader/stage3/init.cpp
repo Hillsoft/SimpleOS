@@ -27,6 +27,8 @@ bool initialize(uint8_t bootDrive) {
     return false;
   }
 
+  mysty::puts("Initialisation complete\n");
+
   return true;
 }
 

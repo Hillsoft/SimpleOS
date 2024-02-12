@@ -31,7 +31,7 @@ $(STAGE3__BUILD_DIR)/%.obj:  $(STAGE3__SRC_DIR)/%.cpp
 
 $(STAGE3__BUILD_DIR)/main.bin: $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__OBJS)) $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__ASM_OBJS)) $(STAGE3__BUILD_DIR)/protected_setup.bin $(STAGE3__SRC_DIR)/linker.ld
 	@echo "Linking Stage3"
-	@$(TARGET_LD) $(TARGET_LINKFLAGS) -o $(STAGE3__BUILD_DIR)/main.bin -T $(STAGE3__SRC_DIR)/linker.ld $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__OBJS)) $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__ASM_OBJS))
+	@$(TARGET_LD) $(TARGET_LINKFLAGS) -o $(STAGE3__BUILD_DIR)/main.bin -Xlinker -Map $(STAGE3__BUILD_DIR)/map.txt -T $(STAGE3__SRC_DIR)/linker.ld $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__OBJS)) $(addprefix $(STAGE3__BUILD_DIR)/,$(STAGE3__ASM_OBJS))
 
 # $(STAGE3__BUILD_DIR)/main.bin: $(STAGE3__BUILD_DIR)/main.bin
 # 	objcopy -O binary $(STAGE3__BUILD_DIR)/main.bin $(STAGE3__BUILD_DIR)/main.bin

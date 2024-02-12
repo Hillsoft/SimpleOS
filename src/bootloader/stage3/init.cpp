@@ -3,6 +3,7 @@
 #include "disk.hpp"
 #include "fat.hpp"
 #include "interrupts.hpp"
+#include "memory.hpp"
 #include "mysty/io.hpp"
 
 namespace simpleos {
@@ -11,6 +12,10 @@ bool initialize(uint8_t bootDrive) {
   mysty::clrscr();
   constexpr mysty::StringView initializingMessage{"Initialising SimpleOS...\n"};
   mysty::puts(initializingMessage);
+
+  constexpr mysty::StringView memoryMessage{"  Memory...\n"};
+  mysty::puts(memoryMessage);
+  simpleos::initializeMemory();
 
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);

@@ -6,7 +6,7 @@ OUTPUT_FORMAT(binary)
 SECTIONS
 {
     . = 0x20000;
-    .data : {
+    .text : {
       "./build/bootloader/stage3/protected_setup.bin"
     }
     .entry2              : { __entry2_start = .;      *(.entry2)   }

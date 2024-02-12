@@ -15,6 +15,7 @@ switchToProtected:
   mov bp, sp
 
   call enableA20
+  call loadMemoryMap
   call loadGDT
 
   ; set protection enable flag in CR0
@@ -83,6 +84,32 @@ loadGDT:
   mov [gdt_descriptor + 2], eax
 
   lgdt [gdt_descriptor]
+  ret
+
+loadMemoryMap:
+  ; store size at 0x500
+  ; load starting at 0x504
+  xor edi, edi
+  mov ax, 50h
+  mov es, ax
+  mov di, 8
+  xor ebx, ebx
+  .loop:
+  mov eax, 0xE820
+  mov edx, 534D4150h
+  mov ecx, 24
+  sub ecx, edi
+  int 15h
+  add edi, 24
+  jc .loop_done
+  or ebx, ebx
+  jz .loop_done
+  jmp .loop
+.loop_done:
+  mov ecx, edi
+  sub ecx, 8
+  xor edi, edi
+  mov es:[di], ecx
   ret
 
 KbdControllerDataPort equ 0x60

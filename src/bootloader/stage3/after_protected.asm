@@ -8,8 +8,10 @@ extern cstart
 section .entry2
 
 pstart:
+  cli
   mov ax, 0x10
   mov ds, ax
+  mov es, ax
   mov ss, ax
 
   mov [boot_drive], dl

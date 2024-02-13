@@ -14,6 +14,12 @@ class File {
     FAILED,
   };
 
+  File(File const& other) = delete;
+  File& operator=(File const& other) = delete;
+
+  File(File&& other);
+  File& operator=(File&& other);
+
   ~File();
 
   size_t remainingBytes() const;

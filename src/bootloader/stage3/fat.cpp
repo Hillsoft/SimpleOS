@@ -356,6 +356,17 @@ mysty::Optional<File> openFile(mysty::StringView path) {
 
 File::File(uint8_t handle) : handle_(handle) {}
 
+File::File(File&& other) : handle_(other.handle_) {
+  other.handle_ = 255;
+}
+
+File& File::operator=(File&& other) {
+  close();
+  handle_ = other.handle_;
+  other.handle_ = 255;
+  return *this;
+}
+
 File::~File() {
   close();
 }

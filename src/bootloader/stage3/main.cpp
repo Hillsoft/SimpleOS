@@ -6,16 +6,9 @@
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
 
-extern "C" {
+namespace {
 
-void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
-  if (!simpleos::initialize(bootDrive)) {
-    constexpr mysty::StringView errorMessage{
-        "Failed to initialise, aborting!\n"};
-    mysty::puts(errorMessage);
-    return;
-  }
-
+void testFile() {
   constexpr mysty::StringView testFileName{"TEST.TXT"};
   mysty::Optional<simpleos::File> testFile = simpleos::openFile(testFileName);
   if (!testFile.has_value()) {
@@ -44,5 +37,51 @@ void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
   }
 
   mysty::putc('\n');
+}
+
+void testMemory() {
+  uint8_t* ptra = new uint8_t[256];
+
+  mysty::printf("ptra: %X\n", reinterpret_cast<size_t>(ptra));
+
+  uint8_t* ptrb = new uint8_t[256];
+
+  mysty::printf("ptrb: %X\n", reinterpret_cast<size_t>(ptrb));
+
+  delete[] ptra;
+
+  uint8_t* ptrc = new uint8_t[5];
+
+  mysty::printf("ptrc: %X\n", reinterpret_cast<size_t>(ptrc));
+
+  uint8_t* ptrd = new uint8_t[5];
+
+  mysty::printf("ptrd: %X\n", reinterpret_cast<size_t>(ptrd));
+
+  delete[] ptrb;
+  delete[] ptrc;
+  delete[] ptrd;
+
+  uint8_t* ptre = new uint8_t[512];
+
+  mysty::printf("ptre: %X\n", reinterpret_cast<size_t>(ptre));
+
+  delete[] ptre;
+}
+
+} // namespace
+
+extern "C" {
+
+void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
+  if (!simpleos::initialize(bootDrive)) {
+    constexpr mysty::StringView errorMessage{
+        "Failed to initialise, aborting!\n"};
+    mysty::puts(errorMessage);
+    return;
+  }
+
+  testFile();
+  testMemory();
 }
 }

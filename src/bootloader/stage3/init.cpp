@@ -15,7 +15,11 @@ bool initialize(uint8_t bootDrive) {
 
   constexpr mysty::StringView memoryMessage{"  Memory...\n"};
   mysty::puts(memoryMessage);
-  simpleos::initializeMemory();
+  if (!simpleos::initializeMemory()) {
+    constexpr mysty::StringView errorMessage{"Failed to initialize memory\n"};
+    mysty::puts(errorMessage);
+    return false;
+  }
 
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);

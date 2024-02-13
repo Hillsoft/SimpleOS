@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mysty/utility.hpp"
+
 namespace mysty {
 
 template <typename T>
@@ -8,7 +10,8 @@ class Optional {
   constexpr Optional() : hasValue_(false) {}
 
   template <typename... Args>
-  constexpr Optional(Args... args) : hasValue_(true), value_(args...) {}
+  constexpr Optional(Args... args)
+      : hasValue_(true), value_(mysty::forward<Args...>(args...)) {}
 
   // TODO: implement later
   Optional(Optional const& other) = delete;

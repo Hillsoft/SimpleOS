@@ -5,6 +5,7 @@
 #include "mysty/array.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
+#include "mysty/string.hpp"
 
 namespace {
 
@@ -69,6 +70,11 @@ void testMemory() {
   delete[] ptre;
 }
 
+void testString() {
+  mysty::String myStr = "Test string\n";
+  mysty::puts(myStr);
+}
+
 } // namespace
 
 extern "C" {
@@ -83,5 +89,6 @@ void __attribute__((cdecl)) cstart(uint8_t bootDrive) {
 
   testFile();
   testMemory();
+  testString();
 }
 }

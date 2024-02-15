@@ -50,6 +50,14 @@ class Span {
     requires(same_as<T, const char>)
   constexpr Span(const char* c) : Span(c, strlen(c)) {}
 
+  template <typename T2 = T>
+    requires(same_as<T, char>)
+  constexpr Span(String& s) : Span(s.get(), s.size()) {}
+
+  template <typename T2 = T>
+    requires(same_as<T, const char>)
+  constexpr Span(String const& s) : Span(s.get(), s.size()) {}
+
   constexpr T& at(size_t i) const { return start_[i]; }
   constexpr T& operator[](size_t i) const { return start_[i]; }
 

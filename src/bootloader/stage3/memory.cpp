@@ -114,6 +114,10 @@ void* malloc(size_t size) {
 }
 
 void free(void* ptr) {
+  if (ptr == nullptr) {
+    return;
+  }
+
   ChunkEntry* curEntry = reinterpret_cast<ChunkEntry*>(
       reinterpret_cast<uint8_t*>(ptr) - sizeof(ChunkEntry));
 

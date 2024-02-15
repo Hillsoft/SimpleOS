@@ -14,11 +14,11 @@ constexpr uint16_t kPic2Command = 0xA0;
 constexpr uint16_t kPic2Data = 0xA1;
 
 void suspendInterrupts() {
-  __asm__("cli");
+  asm volatile("cli");
 }
 
 void restoreInterrupts() {
-  __asm__("sti");
+  asm volatile("sti");
 }
 
 struct __attribute__((packed)) InterruptDescriptor32 {

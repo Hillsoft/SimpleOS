@@ -16,7 +16,7 @@ void registerInterrupt(
     InterruptType type);
 
 inline void awaitInterrupt() {
-  __asm__("hlt");
+  asm volatile("hlt");
 }
 
 } // namespace simpleos

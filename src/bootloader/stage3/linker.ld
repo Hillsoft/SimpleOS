@@ -11,6 +11,7 @@ SECTIONS
     }
     .entry2              : { __entry2_start = .;      *(.entry2)   }
     .text               : { __text_start = .;       *(.text)    }
+    .text.unlikely      : { *(.text.unlinkey)                   }
     .data               : { __data_start = .;       *(.data)    }
     .rodata             : { __rodata_start = .;     *(.rodata)  }
     .bss                : { __bss_start = .;        *(.bss)     }

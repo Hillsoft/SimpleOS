@@ -14,7 +14,7 @@ export TARGET_CFLAGS = -std=c++20 -O3 -flto -c -ffreestanding -fno-exceptions -f
 export TARGET_CC = $(TARGET)-gcc
 export TARGET_CXX = $(TARGET)-g++
 export TARGET_LD = $(TARGET)-g++
-export TARGET_LINKFLAGS = -flto=auto -O3 -nostdinc -nostdlib
+export TARGET_LINKFLAGS = -flto=auto -fwhole-program -O3 -nostdinc -nostdlib
 export TARGET_LIBS =
 
 export BUILD_DIR = $(abspath build)

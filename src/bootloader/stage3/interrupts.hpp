@@ -9,11 +9,14 @@ enum class InterruptType {
   Trap,
 };
 
+enum class InterruptRange { PIC, CPU };
+
 void initializeInterrupts();
 void registerInterrupt(
     uint8_t offset,
     __attribute__((interrupt)) void (*handler)(void*),
-    InterruptType type);
+    InterruptType type,
+    InterruptRange range);
 
 inline void awaitInterrupt() {
   asm volatile("hlt");

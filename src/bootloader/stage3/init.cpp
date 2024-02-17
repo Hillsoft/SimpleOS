@@ -5,6 +5,7 @@
 #include "interrupts.hpp"
 #include "memory.hpp"
 #include "mysty/io.hpp"
+#include "traps.hpp"
 
 namespace simpleos {
 
@@ -24,6 +25,10 @@ bool initialize(uint8_t bootDrive) {
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);
   simpleos::initializeInterrupts();
+
+  constexpr mysty::StringView trapsMessage{"  Fault handling...\n"};
+  mysty::puts(trapsMessage);
+  registerTraps();
 
   constexpr mysty::StringView floppyMessage{"  Floppy Disk Driver...\n"};
   mysty::puts(floppyMessage);

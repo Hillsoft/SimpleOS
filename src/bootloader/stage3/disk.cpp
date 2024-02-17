@@ -352,7 +352,11 @@ bool recalibrate() {
 } // namespace
 
 bool initialize(uint8_t driveNumber) {
-  registerInterrupt(6, floppyInterruptHandlerWrapper, InterruptType::Interrupt);
+  registerInterrupt(
+      6,
+      floppyInterruptHandlerWrapper,
+      InterruptType::Interrupt,
+      InterruptRange::PIC);
 
   // We will reset later which sends this to the controller
   g_currentDrive = driveNumber;

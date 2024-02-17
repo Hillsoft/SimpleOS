@@ -111,10 +111,19 @@ void initializeInterrupts() {
 void registerInterrupt(
     uint8_t offset,
     __attribute__((interrupt)) void (*handler)(void*),
-    InterruptType type) {
+    InterruptType type,
+    InterruptRange range) {
   suspendInterrupts();
 
-  interruptTable[0x20 + offset] =
+  switch (range) {
+    case InterruptRange::PIC:
+      offset += 0x20;
+    case InterruptRange::CPU:
+    default:
+      break;
+  }
+
+  interruptTable[offset] =
       InterruptDescriptor32::make(reinterpret_cast<void*>(handler), type);
 
   restoreInterrupts();

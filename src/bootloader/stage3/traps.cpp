@@ -70,6 +70,31 @@ void registerTraps() {
       InterruptRange::CPU);
 }
 
+SelectorErrorCode::SelectorErrorCode(uint32_t rawErrorCode)
+    : rawErrorCode_(rawErrorCode) {}
+
+bool SelectorErrorCode::external() const {
+  return (rawErrorCode_ & 0b1) > 0;
+}
+
+SelectorErrorCode::Table SelectorErrorCode::table() const {
+  auto tableIndex = (rawErrorCode_ & 0b110) >> 1;
+  switch (tableIndex) {
+    case 0:
+      return Table::GDT;
+    case 1:
+      return Table::IDT;
+    case 2:
+      return Table::LDT;
+    default:
+      return Table::IDT;
+  }
+}
+
+uint16_t SelectorErrorCode::index() const {
+  return (rawErrorCode_ >> 3) & 0x1FFF;
+}
+
 } // namespace simpleos
 
 extern "C" {

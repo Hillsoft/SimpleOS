@@ -7,6 +7,21 @@ namespace simpleos {
 
 void registerTraps();
 
+struct SelectorErrorCode {
+ public:
+  enum class Table { GDT, IDT, LDT };
+
+  SelectorErrorCode(uint32_t rawErrorCode);
+
+  bool external() const;
+  Table table() const;
+  uint16_t index() const;
+
+ private:
+  uint32_t rawErrorCode_;
+};
+static_assert(sizeof(SelectorErrorCode) == 4);
+
 } // namespace simpleos
 
 extern "C" {

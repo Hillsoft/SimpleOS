@@ -50,6 +50,24 @@ void registerTraps() {
       boundRangeExceededInterruptHandlerWrapper,
       InterruptType::Trap,
       InterruptRange::CPU);
+
+  registerInterrupt(
+      6,
+      invalidOpcodeInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
+
+  registerInterrupt(
+      7,
+      fpuNotAvailableInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
+
+  registerInterrupt(
+      8,
+      doubleFaultInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
 }
 
 } // namespace simpleos
@@ -99,6 +117,31 @@ boundRangeExceededInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nBound range exceeded\n",
       reinterpret_cast<size_t>(faultingAddress));
+  abort();
+}
+
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+invalidOpcodeInterruptHandler(void* faultingAddress) {
+  mysty::printf(
+      "\nFault at: 0x%X\nInvalid opcode\n",
+      reinterpret_cast<size_t>(faultingAddress));
+  abort();
+}
+
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+fpuNotAvailableInterruptHandler(void* faultingAddress) {
+  mysty::printf(
+      "\nFault at: 0x%X\nFPU not available\n",
+      reinterpret_cast<size_t>(faultingAddress));
+  abort();
+}
+
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+doubleFaultInterruptHandler(void* faultingAddress, uint32_t errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nDouble fault\nError code: 0x%X\n",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode);
   abort();
 }
 }

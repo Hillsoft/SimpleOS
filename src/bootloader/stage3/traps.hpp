@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mysty/int.hpp"
+
 namespace simpleos {
 
 void registerTraps();
@@ -31,4 +33,16 @@ __attribute__((interrupt)) void boundRangeExceededInterruptHandlerWrapper(
     void*);
 __attribute__((cdecl)) __attribute__((externally_visible)) void
 boundRangeExceededInterruptHandler(void* faultingAddress);
+
+__attribute__((interrupt)) void invalidOpcodeInterruptHandlerWrapper(void*);
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+invalidOpcodeInterruptHandler(void* faultingAddress);
+
+__attribute__((interrupt)) void fpuNotAvailableInterruptHandlerWrapper(void*);
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+fpuNotAvailableInterruptHandler(void* faultingAddress);
+
+__attribute__((interrupt)) void doubleFaultInterruptHandlerWrapper(void*);
+__attribute__((cdecl)) __attribute__((externally_visible)) void
+doubleFaultInterruptHandler(void* faultingAddress, uint32_t errorCode);
 }

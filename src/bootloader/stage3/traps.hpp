@@ -55,4 +55,21 @@ ASM_CALLABLE void fpuNotAvailableInterruptHandler(void* faultingAddress);
 __attribute__((interrupt)) void doubleFaultInterruptHandlerWrapper(void*);
 ASM_CALLABLE void doubleFaultInterruptHandler(
     void* faultingAddress, uint32_t errorCode);
+
+__attribute__((interrupt)) void invalidTssInterruptHandlerWrapper(void*);
+ASM_CALLABLE void invalidTssInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode);
+
+__attribute__((interrupt)) void segmentNotPresentInterruptHandlerWrapper(void*);
+ASM_CALLABLE void segmentNotPresentInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode);
+
+__attribute__((interrupt)) void stackSegmentFaultInterruptHandlerWrapper(void*);
+ASM_CALLABLE void stackSegmentFaultInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode);
+
+__attribute__((interrupt)) void generalProtectionFaultInterruptHandlerWrapper(
+    void*);
+ASM_CALLABLE void generalProtectionFaultInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode);
 }

@@ -182,3 +182,95 @@ doubleFaultInterruptHandlerWrapper:
     add sp, 4
     sti
     iret
+
+extern invalidTssInterruptHandler
+
+global invalidTssInterruptHandlerWrapper
+invalidTssInterruptHandlerWrapper:
+    cli
+    push eax
+    push ecx
+    push edx
+    mov eax, [esp + 12]
+    push eax
+    mov eax, [esp + 16]
+    push eax
+    call invalidTssInterruptHandler
+    add sp, 8
+    mov al, 20h
+    out 20h, al
+    pop edx
+    pop ecx
+    pop eax
+    add sp, 4
+    sti
+    iret
+
+extern segmentNotPresentInterruptHandler
+
+global segmentNotPresentInterruptHandlerWrapper
+segmentNotPresentInterruptHandlerWrapper:
+    cli
+    push eax
+    push ecx
+    push edx
+    mov eax, [esp + 12]
+    push eax
+    mov eax, [esp + 16]
+    push eax
+    call segmentNotPresentInterruptHandler
+    add sp, 8
+    mov al, 20h
+    out 20h, al
+    pop edx
+    pop ecx
+    pop eax
+    add sp, 4
+    sti
+    iret
+
+extern stackSegmentFaultInterruptHandler
+
+global stackSegmentFaultInterruptHandlerWrapper
+stackSegmentFaultInterruptHandlerWrapper:
+    cli
+    push eax
+    push ecx
+    push edx
+    mov eax, [esp + 12]
+    push eax
+    mov eax, [esp + 16]
+    push eax
+    call stackSegmentFaultInterruptHandler
+    add sp, 8
+    mov al, 20h
+    out 20h, al
+    pop edx
+    pop ecx
+    pop eax
+    add sp, 4
+    sti
+    iret
+
+extern generalProtectionFaultInterruptHandler
+
+global generalProtectionFaultInterruptHandlerWrapper
+generalProtectionFaultInterruptHandlerWrapper:
+    cli
+    push eax
+    push ecx
+    push edx
+    mov eax, [esp + 12]
+    push eax
+    mov eax, [esp + 16]
+    push eax
+    call generalProtectionFaultInterruptHandler
+    add sp, 8
+    mov al, 20h
+    out 20h, al
+    pop edx
+    pop ecx
+    pop eax
+    add sp, 4
+    sti
+    iret

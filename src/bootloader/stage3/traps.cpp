@@ -68,6 +68,30 @@ void registerTraps() {
       doubleFaultInterruptHandlerWrapper,
       InterruptType::Trap,
       InterruptRange::CPU);
+
+  registerInterrupt(
+      10,
+      invalidTssInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
+
+  registerInterrupt(
+      11,
+      segmentNotPresentInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
+
+  registerInterrupt(
+      12,
+      stackSegmentFaultInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
+
+  registerInterrupt(
+      13,
+      generalProtectionFaultInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
 }
 
 SelectorErrorCode::SelectorErrorCode(uint32_t rawErrorCode)
@@ -172,6 +196,46 @@ ASM_CALLABLE void doubleFaultInterruptHandler(
       "\nFault at: 0x%X\nDouble fault\nError code: 0x%X\n",
       reinterpret_cast<size_t>(faultingAddress),
       errorCode);
+  abort();
+}
+
+ASM_CALLABLE void invalidTssInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nInvalid TSS\nIndex 0x%X in %s",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode.index(),
+      errorCode.tableStr());
+  abort();
+}
+
+ASM_CALLABLE void segmentNotPresentInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nSegment Not Found\nIndex 0x%X in %s",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode.index(),
+      errorCode.tableStr());
+  abort();
+}
+
+ASM_CALLABLE void stackSegmentFaultInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nStack Segment Fault\nIndex 0x%X in %s",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode.index(),
+      errorCode.tableStr());
+  abort();
+}
+
+ASM_CALLABLE void generalProtectionFaultInterruptHandler(
+    void* faultingAddress, simpleos::SelectorErrorCode errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nGeneral Protection Fault\nIndex 0x%X in %s",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode.index(),
+      errorCode.tableStr());
   abort();
 }
 }

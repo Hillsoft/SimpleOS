@@ -2,6 +2,7 @@
 
 #include "mysty/compat.hpp"
 #include "mysty/int.hpp"
+#include "mysty/span.hpp"
 
 namespace simpleos {
 
@@ -15,6 +16,7 @@ struct SelectorErrorCode {
 
   bool external() const;
   Table table() const;
+  mysty::StringView tableStr() const;
   uint16_t index() const;
 
  private:

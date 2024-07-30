@@ -91,6 +91,19 @@ SelectorErrorCode::Table SelectorErrorCode::table() const {
   }
 }
 
+mysty::StringView SelectorErrorCode::tableStr() const {
+  switch (table()) {
+    case Table::GDT:
+      return "GDT";
+    case Table::IDT:
+      return "IDT";
+    case Table::LDT:
+      return "LDT";
+    default:
+      return "Unknown table";
+  }
+}
+
 uint16_t SelectorErrorCode::index() const {
   return (rawErrorCode_ >> 3) & 0x1FFF;
 }

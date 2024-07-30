@@ -98,71 +98,63 @@ uint16_t SelectorErrorCode::index() const {
 } // namespace simpleos
 
 extern "C" {
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-divErrorInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void divErrorInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nDivision by zero\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-debugInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void debugInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nDebug signal\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-nmiInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void nmiInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nNMI\n", reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-breakpointInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void breakpointInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nBreakpoint\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-overflowInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void overflowInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nOverflow\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-boundRangeExceededInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void boundRangeExceededInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nBound range exceeded\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-invalidOpcodeInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void invalidOpcodeInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nInvalid opcode\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-fpuNotAvailableInterruptHandler(void* faultingAddress) {
+ASM_CALLABLE void fpuNotAvailableInterruptHandler(void* faultingAddress) {
   mysty::printf(
       "\nFault at: 0x%X\nFPU not available\n",
       reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 
-__attribute__((cdecl)) __attribute__((externally_visible)) void
-doubleFaultInterruptHandler(void* faultingAddress, uint32_t errorCode) {
+ASM_CALLABLE void doubleFaultInterruptHandler(
+    void* faultingAddress, uint32_t errorCode) {
   mysty::printf(
       "\nFault at: 0x%X\nDouble fault\nError code: 0x%X\n",
       reinterpret_cast<size_t>(faultingAddress),

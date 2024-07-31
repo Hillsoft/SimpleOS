@@ -140,6 +140,45 @@ uint16_t SelectorErrorCode::index() const {
   return (rawErrorCode_ >> 3) & 0x1FFF;
 }
 
+PageFaultErrorCode::PageFaultErrorCode(uint32_t rawErrorCode)
+    : rawErrorCode_(rawErrorCode) {}
+
+bool PageFaultErrorCode::present() const {
+  return (rawErrorCode_ & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::write() const {
+  return ((rawErrorCode_ >> 1) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::read() const {
+  return !write();
+}
+
+bool PageFaultErrorCode::user() const {
+  return ((rawErrorCode_ >> 2) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::reservedWrite() const {
+  return ((rawErrorCode_ >> 3) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::execute() const {
+  return ((rawErrorCode_ >> 4) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::protectionKey() const {
+  return ((rawErrorCode_ >> 5) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::shadowStack() const {
+  return ((rawErrorCode_ >> 6) & 0b1) > 0;
+}
+
+bool PageFaultErrorCode::sgx() const {
+  return ((rawErrorCode_ >> 15) & 0b1) > 0;
+}
+
 } // namespace simpleos
 
 extern "C" {

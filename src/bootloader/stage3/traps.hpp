@@ -24,6 +24,25 @@ struct SelectorErrorCode {
 };
 static_assert(sizeof(SelectorErrorCode) == 4);
 
+struct PageFaultErrorCode {
+ public:
+  PageFaultErrorCode(uint32_t rawErrorCode);
+
+  bool present() const;
+  bool write() const;
+  bool read() const;
+  bool user() const;
+  bool reservedWrite() const;
+  bool execute() const;
+  bool protectionKey() const;
+  bool shadowStack() const;
+  bool sgx() const;
+
+ private:
+  uint32_t rawErrorCode_;
+};
+static_assert(sizeof(PageFaultErrorCode) == 4);
+
 } // namespace simpleos
 
 extern "C" {

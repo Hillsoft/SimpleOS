@@ -188,6 +188,20 @@ bool selfTest(ControllerConfiguration expectedConfiguration) {
   return true;
 }
 
+bool checkIsDualChannel() {
+  x86_outb(kCommandPort, PS2Command::ENABLE_SECOND_PORT);
+  ControllerConfiguration configuration = getConfiguration();
+  return !configuration.clockDisabled(Port::Second);
+}
+
+void preInitSecondChannel() {
+  x86_outb(kCommandPort, PS2Command::DISABLE_SECOND_PORT);
+  ControllerConfiguration configuration = getConfiguration();
+  configuration.setInterrupt(Port::Second, false);
+  configuration.setClockDisabled(Port::Second, false);
+  setConfiguration(configuration);
+}
+
 } // namespace
 
 bool initializePS2Driver() {
@@ -214,6 +228,11 @@ bool initializePS2Driver() {
         "PS/2 Controller self-test failed"};
     mysty::puts(kErrorMessage);
     return false;
+  }
+
+  bool isDualChannel = checkIsDualChannel();
+  if (isDualChannel) {
+    preInitSecondChannel();
   }
 
   return false;

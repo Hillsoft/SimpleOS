@@ -1,6 +1,8 @@
 #include "hid/ps2.hpp"
 
 #include "mysty/int.hpp"
+#include "mysty/io.hpp"
+#include "mysty/span.hpp"
 #include "x86.hpp"
 
 namespace simpleos::hid {
@@ -43,6 +45,18 @@ uint8_t readByte() {
 } // namespace
 
 bool initializePS2Driver() {
+  if (!doesPS2ControllerExist()) {
+    constexpr mysty::StringView kErrorMessage{"No PS/2 Controller exists"};
+    mysty::puts(kErrorMessage);
+    return false;
+  }
+
+  disablePort(Port::First);
+  disablePort(Port::Second);
+
+  // Flush ouptutBuffer
+  readByte();
+
   return false;
 }
 

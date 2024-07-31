@@ -18,6 +18,8 @@ enum class Port { First, Second };
 enum class BufferStatus { Empty, Full };
 
 enum PS2Command : uint8_t {
+  READ_CONTROLLER_CONFIGURAITON = 0x20,
+  WRITE_CONTROLLER_CONFIGURATION = 0x60,
   DISABLE_SECOND_PORT = 0xA7,
   ENABLE_SECOND_PORT = 0xA8,
   TEST_SECOND_PORT = 0xA9,
@@ -149,8 +151,29 @@ void disablePort(Port port) {
   }
 }
 
+StatusRegister readStatusRegister() {
+  return StatusRegister{x86_inb(kStatusPort)};
+}
+
 uint8_t readByte() {
+  while (readStatusRegister().outputBuffer() == BufferStatus::Empty) {
+  }
   return x86_inb(kDataPort);
+}
+
+void writeByte(uint8_t byte) {
+  while (readStatusRegister().inputBuffer() == BufferStatus::Full) {
+  }
+  x86_outb(kDataPort, byte);
+}
+
+ControllerConfiguration getConfiguration() {
+  x86_outb(kCommandPort, PS2Command::READ_CONTROLLER_CONFIGURAITON);
+  return ControllerConfiguration{readByte()};
+}
+
+void setConfiguration(ControllerConfiguration configuration) {
+  x86_outb(kCommandPort, PS2Command::WRITE_CONTROLLER_CONFIGURATION);
 }
 
 } // namespace
@@ -166,7 +189,13 @@ bool initializePS2Driver() {
   disablePort(Port::Second);
 
   // Flush ouptutBuffer
-  readByte();
+  x86_inb(kDataPort);
+
+  ControllerConfiguration configuration = getConfiguration();
+  configuration.setInterrupt(Port::First, false);
+  configuration.setFirstPortTranslation(false);
+  configuration.setClockDisabled(Port::First, true);
+  setConfiguration(configuration);
 
   return false;
 }

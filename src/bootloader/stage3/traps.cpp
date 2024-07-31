@@ -117,14 +117,22 @@ SelectorErrorCode::Table SelectorErrorCode::table() const {
 
 mysty::StringView SelectorErrorCode::tableStr() const {
   switch (table()) {
-    case Table::GDT:
-      return "GDT";
-    case Table::IDT:
-      return "IDT";
-    case Table::LDT:
-      return "LDT";
-    default:
-      return "Unknown table";
+    case Table::GDT: {
+      constexpr mysty::StringView kGDT{"GDT"};
+      return kGDT;
+    }
+    case Table::IDT: {
+      constexpr mysty::StringView kIDT{"IDT"};
+      return kIDT;
+    }
+    case Table::LDT: {
+      constexpr mysty::StringView kLDT{"LDT"};
+      return kLDT;
+    }
+    default: {
+      constexpr mysty::StringView kUnknownTable{"Unknown Table"};
+      return kUnknownTable;
+    }
   }
 }
 

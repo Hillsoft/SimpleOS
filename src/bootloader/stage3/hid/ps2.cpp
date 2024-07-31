@@ -81,6 +81,12 @@ struct ControllerConfiguration {
     }
   }
 
+  bool firstPortTranslation() const { return getBit(6); }
+
+  void setFirstPortTranslation(bool translationEnabled) {
+    setBit(6, translationEnabled);
+  }
+
  private:
   void setBit(uint8_t bit, bool value) {
     uint8_t newBit = value ? 1 : 0;

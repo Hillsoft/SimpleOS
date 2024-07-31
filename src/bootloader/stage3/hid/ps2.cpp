@@ -176,6 +176,18 @@ void setConfiguration(ControllerConfiguration configuration) {
   x86_outb(kCommandPort, PS2Command::WRITE_CONTROLLER_CONFIGURATION);
 }
 
+bool selfTest(ControllerConfiguration expectedConfiguration) {
+  x86_outb(kCommandPort, PS2Command::TEST_CONTROLLER);
+  uint8_t selfTestResult = readByte();
+  if (selfTestResult != 0x55) {
+    return false;
+  }
+
+  setConfiguration(expectedConfiguration);
+
+  return true;
+}
+
 } // namespace
 
 bool initializePS2Driver() {
@@ -196,6 +208,13 @@ bool initializePS2Driver() {
   configuration.setFirstPortTranslation(false);
   configuration.setClockDisabled(Port::First, true);
   setConfiguration(configuration);
+
+  if (!selfTest(configuration)) {
+    constexpr mysty::StringView kErrorMessage{
+        "PS/2 Controller self-test failed"};
+    mysty::puts(kErrorMessage);
+    return false;
+  }
 
   return false;
 }

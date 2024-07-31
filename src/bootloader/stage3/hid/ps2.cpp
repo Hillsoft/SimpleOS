@@ -25,6 +25,77 @@ enum PS2Command : uint8_t {
   ENABLE_FIRST_PORT = 0xAE,
 };
 
+struct ControllerConfiguration {
+ public:
+  explicit ControllerConfiguration(uint8_t data) : data_(data) {}
+
+  uint8_t getData() const { return data_; }
+
+  bool interruptsEnabled(Port port) const {
+    switch (port) {
+      case Port::First:
+        return getBit(0);
+      case Port::Second:
+        return getBit(1);
+      default:
+        return false;
+    }
+  }
+
+  void setInterrupt(Port port, bool interruptsEnabled) {
+    switch (port) {
+      case Port::First:
+        setBit(0, interruptsEnabled);
+        break;
+      case Port::Second:
+        setBit(1, interruptsEnabled);
+        break;
+      default:
+        break;
+    }
+  }
+
+  bool systemFlag() const { return getBit(2); }
+
+  bool clockDisabled(Port port) const {
+    switch (port) {
+      case Port::First:
+        return getBit(4);
+      case Port::Second:
+        return getBit(5);
+      default:
+        return false;
+    }
+  }
+
+  void setClockDisabled(Port port, bool clockDisabled) {
+    switch (port) {
+      case Port::First:
+        setBit(4, clockDisabled);
+        break;
+      case Port::Second:
+        setBit(5, clockDisabled);
+        break;
+      default:
+        break;
+    }
+  }
+
+ private:
+  void setBit(uint8_t bit, bool value) {
+    uint8_t newBit = value ? 1 : 0;
+    newBit <<= bit;
+
+    uint8_t bitMask = ~(1 << bit);
+
+    data_ = (data_ & bitMask) | newBit;
+  }
+
+  bool getBit(uint8_t bit) const { return ((data_ >> bit) & 0b1) > 0; }
+
+  uint8_t data_;
+};
+
 bool doesPS2ControllerExist() {
   // TODO: implement
   return true;

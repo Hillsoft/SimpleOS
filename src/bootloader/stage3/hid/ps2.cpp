@@ -202,6 +202,15 @@ void preInitSecondChannel() {
   setConfiguration(configuration);
 }
 
+bool testPort(Port port) {
+  PS2Command command = port == Port::First ? PS2Command::TEST_FIRST_PORT
+                                           : PS2Command::TEST_SECOND_PORT;
+  x86_outb(kCommandPort, command);
+
+  uint8_t result = readByte();
+  return result == 0;
+}
+
 } // namespace
 
 bool initializePS2Driver() {
@@ -233,6 +242,15 @@ bool initializePS2Driver() {
   bool isDualChannel = checkIsDualChannel();
   if (isDualChannel) {
     preInitSecondChannel();
+  }
+
+  bool firstPortValid = testPort(Port::First);
+  bool secondPortValid = isDualChannel && testPort(Port::Second);
+
+  if (!firstPortValid && !secondPortValid) {
+    constexpr mysty::StringView kErrorMessage{"No working PS/2 ports"};
+    mysty::puts(kErrorMessage);
+    return false;
   }
 
   return false;

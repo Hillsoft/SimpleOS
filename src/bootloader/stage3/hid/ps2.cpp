@@ -15,6 +15,8 @@ constexpr uint16_t kCommandPort = 0x64;
 
 enum class Port { First, Second };
 
+enum class BufferStatus { Empty, Full };
+
 enum PS2Command : uint8_t {
   DISABLE_SECOND_PORT = 0xA7,
   ENABLE_SECOND_PORT = 0xA8,
@@ -99,6 +101,38 @@ struct ControllerConfiguration {
 
   bool getBit(uint8_t bit) const { return ((data_ >> bit) & 0b1) > 0; }
 
+  uint8_t data_;
+};
+
+struct StatusRegister {
+ public:
+  StatusRegister(uint8_t rawByte) : data_(rawByte) {}
+
+  BufferStatus outputBuffer() const {
+    if ((data_ & 0b1) > 0) {
+      return BufferStatus::Full;
+    } else {
+      return BufferStatus::Empty;
+    }
+  }
+
+  BufferStatus inputBuffer() const {
+    if (((data_ >> 1) & 0b1) > 0) {
+      return BufferStatus::Full;
+    } else {
+      return BufferStatus::Empty;
+    }
+  }
+
+  bool systemFlag() const { return (data_ >> 2) & 0b1; }
+
+  bool isCommand() const { return (data_ >> 3) & 0b1; }
+
+  bool timeOutError() const { return (data_ >> 6) & 0b1; }
+
+  bool parityError() const { return (data_ >> 7) & 0b1; }
+
+ private:
   uint8_t data_;
 };
 

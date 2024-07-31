@@ -2,6 +2,7 @@
 
 #include "disk.hpp"
 #include "fat.hpp"
+#include "hid/ps2.hpp"
 #include "interrupts.hpp"
 #include "memory.hpp"
 #include "mysty/io.hpp"
@@ -43,6 +44,15 @@ bool initialize(uint8_t bootDrive) {
   if (!initializeFileSystem()) {
     constexpr mysty::StringView errorMessage{
         "Failed to initialise file system\n"};
+    mysty::puts(errorMessage);
+    return false;
+  }
+
+  constexpr mysty::StringView ps2Message{"  PS/2 Controller\n"};
+  mysty::puts(ps2Message);
+  if (!hid::initializePS2Driver()) {
+    constexpr mysty::StringView errorMessage{
+        "Failed to initialise PS/2 Controller\n"};
     mysty::puts(errorMessage);
     return false;
   }

@@ -211,6 +211,15 @@ bool testPort(Port port) {
   return result == 0;
 }
 
+void enablePort(Port port) {
+  PS2Command command = port == Port::First ? PS2Command::ENABLE_FIRST_PORT
+                                           : PS2Command::ENABLE_SECOND_PORT;
+  x86_outb(kCommandPort, command);
+  ControllerConfiguration configuration = getConfiguration();
+  configuration.setInterrupt(port, true);
+  setConfiguration(configuration);
+}
+
 } // namespace
 
 bool initializePS2Driver() {
@@ -251,6 +260,13 @@ bool initializePS2Driver() {
     constexpr mysty::StringView kErrorMessage{"No working PS/2 ports"};
     mysty::puts(kErrorMessage);
     return false;
+  }
+
+  if (firstPortValid) {
+    enablePort(Port::First);
+  }
+  if (secondPortValid) {
+    enablePort(Port::Second);
   }
 
   return false;

@@ -274,3 +274,26 @@ generalProtectionFaultInterruptHandlerWrapper:
     add sp, 4
     sti
     iret
+
+extern pageFaultInterruptHandler
+
+global pageFaultInterruptHandlerWrapper
+pageFaultInterruptHandlerWrapper:
+    cli
+    push eax
+    push ecx
+    push edx
+    mov eax, [esp + 12]
+    push eax
+    mov eax, [esp + 16]
+    push eax
+    call pageFaultInterruptHandler
+    add sp, 8
+    mov al, 20h
+    out 20h, al
+    pop edx
+    pop ecx
+    pop eax
+    add sp, 4
+    sti
+    iret

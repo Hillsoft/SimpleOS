@@ -92,6 +92,12 @@ void registerTraps() {
       generalProtectionFaultInterruptHandlerWrapper,
       InterruptType::Trap,
       InterruptRange::CPU);
+
+  registerInterrupt(
+      14,
+      pageFaultInterruptHandlerWrapper,
+      InterruptType::Trap,
+      InterruptRange::CPU);
 }
 
 SelectorErrorCode::SelectorErrorCode(uint32_t rawErrorCode)
@@ -283,6 +289,14 @@ ASM_CALLABLE void generalProtectionFaultInterruptHandler(
       reinterpret_cast<size_t>(faultingAddress),
       errorCode.index(),
       errorCode.tableStr());
+  abort();
+}
+
+ASM_CALLABLE void pageFaultInterruptHandler(
+    void* faultingAddress, simpleos::PageFaultErrorCode errorCode) {
+  mysty::printf(
+      "\nFault at: 0x%X\nPage Fault\n",
+      reinterpret_cast<size_t>(faultingAddress));
   abort();
 }
 }

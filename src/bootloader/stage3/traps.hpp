@@ -91,4 +91,8 @@ __attribute__((interrupt)) void generalProtectionFaultInterruptHandlerWrapper(
     void*);
 ASM_CALLABLE void generalProtectionFaultInterruptHandler(
     void* faultingAddress, simpleos::SelectorErrorCode errorCode);
+
+__attribute__((interrupt)) void pageFaultInterruptHandlerWrapper(void*);
+ASM_CALLABLE void pageFaultInterruptHandler(
+    void* faultingAddress, simpleos::PageFaultErrorCode errorCode);
 }

@@ -4,7 +4,6 @@
 #include "mysty/circularBuffer.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
-#include "mysty/span.hpp"
 #include "x86.hpp"
 
 namespace simpleos::hid {
@@ -411,6 +410,10 @@ mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device) {
     return PS2PortHandle{PS2Port::Second};
   }
   return {};
+}
+
+void sendBytesToDevice(PS2PortHandle portHandle, mysty::Span<uint8_t> bytes) {
+  sendBytesToDevice(portHandle.getPort(), bytes);
 }
 
 } // namespace simpleos::hid

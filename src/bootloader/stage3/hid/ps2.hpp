@@ -2,6 +2,7 @@
 
 #include "mysty/compat.hpp"
 #include "mysty/optional.hpp"
+#include "mysty/span.hpp"
 
 namespace simpleos::hid {
 
@@ -26,6 +27,8 @@ class PS2PortHandle {
 bool initializePS2Driver();
 
 mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device);
+
+void sendBytesToDevice(PS2PortHandle portHandle, mysty::Span<uint8_t> bytes);
 
 } // namespace simpleos::hid
 

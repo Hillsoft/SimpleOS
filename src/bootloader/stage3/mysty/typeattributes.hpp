@@ -29,4 +29,30 @@ concept is_const = is_const_t<T>::value;
 template <typename T>
 concept is_not_const = !is_const_t<T>::value;
 
+template <typename T>
+struct remove_reference {
+  typedef T type;
+};
+
+template <typename T>
+struct remove_reference<T&> {
+  typedef T type;
+};
+
+template <typename T>
+struct remove_reference<T&&> {
+  typedef T type;
+};
+
+#ifdef __INTELLISENSE__
+template <typename T>
+concept trivially_destructible = __is_trivially_destructible(T);
+#else
+template <typename T>
+concept trivially_destructible = __has_trivial_destructor(T);
+#endif
+
+template <typename T>
+concept non_trivially_destructible = !trivially_destructible<T>;
+
 } // namespace mysty

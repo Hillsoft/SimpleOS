@@ -1,10 +1,31 @@
 #pragma once
 
 #include "mysty/compat.hpp"
+#include "mysty/optional.hpp"
 
 namespace simpleos::hid {
 
+enum class PS2DeviceType {
+  MF2KEYBOARD,
+};
+
+enum class PS2Port { First, Second };
+
+class PS2PortHandle {
+ public:
+  PS2Port getPort() const { return port_; }
+
+ private:
+  explicit PS2PortHandle(PS2Port port) : port_(port) {}
+
+  PS2Port port_;
+
+  friend mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device);
+};
+
 bool initializePS2Driver();
+
+mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device);
 
 } // namespace simpleos::hid
 

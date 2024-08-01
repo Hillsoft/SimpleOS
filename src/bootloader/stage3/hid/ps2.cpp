@@ -4,7 +4,6 @@
 #include "mysty/circularBuffer.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
-#include "mysty/optional.hpp"
 #include "mysty/span.hpp"
 #include "x86.hpp"
 
@@ -17,11 +16,12 @@ constinit mysty::StorageFor<mysty::FixedCircularBuffer<uint8_t, 64>>
 constinit mysty::StorageFor<mysty::FixedCircularBuffer<uint8_t, 64>>
     secondPortReadBuffer;
 
+constinit mysty::Optional<PS2DeviceType> firstPortDevice;
+constinit mysty::Optional<PS2DeviceType> secondPortDevice;
+
 constexpr uint16_t kDataPort = 0x60;
 constexpr uint16_t kStatusPort = 0x64;
 constexpr uint16_t kCommandPort = 0x64;
-
-enum class Port { First, Second };
 
 enum class BufferStatus { Empty, Full };
 
@@ -38,33 +38,29 @@ enum PS2Command : uint8_t {
   SECOND_PORT_WRITE = 0xD4,
 };
 
-enum class PS2DeviceType {
-  MF2KEYBOARD,
-};
-
 struct ControllerConfiguration {
  public:
   explicit ControllerConfiguration(uint8_t data) : data_(data) {}
 
   uint8_t getData() const { return data_; }
 
-  bool interruptsEnabled(Port port) const {
+  bool interruptsEnabled(PS2Port port) const {
     switch (port) {
-      case Port::First:
+      case PS2Port::First:
         return getBit(0);
-      case Port::Second:
+      case PS2Port::Second:
         return getBit(1);
       default:
         return false;
     }
   }
 
-  void setInterrupt(Port port, bool interruptsEnabled) {
+  void setInterrupt(PS2Port port, bool interruptsEnabled) {
     switch (port) {
-      case Port::First:
+      case PS2Port::First:
         setBit(0, interruptsEnabled);
         break;
-      case Port::Second:
+      case PS2Port::Second:
         setBit(1, interruptsEnabled);
         break;
       default:
@@ -74,23 +70,23 @@ struct ControllerConfiguration {
 
   bool systemFlag() const { return getBit(2); }
 
-  bool clockDisabled(Port port) const {
+  bool clockDisabled(PS2Port port) const {
     switch (port) {
-      case Port::First:
+      case PS2Port::First:
         return getBit(4);
-      case Port::Second:
+      case PS2Port::Second:
         return getBit(5);
       default:
         return false;
     }
   }
 
-  void setClockDisabled(Port port, bool clockDisabled) {
+  void setClockDisabled(PS2Port port, bool clockDisabled) {
     switch (port) {
-      case Port::First:
+      case PS2Port::First:
         setBit(4, clockDisabled);
         break;
-      case Port::Second:
+      case PS2Port::Second:
         setBit(5, clockDisabled);
         break;
       default:
@@ -156,8 +152,8 @@ bool doesPS2ControllerExist() {
   return true;
 }
 
-void disablePort(Port port) {
-  if (port == Port::First) {
+void disablePort(PS2Port port) {
+  if (port == PS2Port::First) {
     x86_outb(kCommandPort, PS2Command::DISABLE_FIRST_PORT);
   } else {
     x86_outb(kCommandPort, PS2Command::DISABLE_SECOND_PORT);
@@ -205,41 +201,41 @@ bool selfTest(ControllerConfiguration expectedConfiguration) {
 bool checkIsDualChannel() {
   x86_outb(kCommandPort, PS2Command::ENABLE_SECOND_PORT);
   ControllerConfiguration configuration = getConfiguration();
-  return !configuration.clockDisabled(Port::Second);
+  return !configuration.clockDisabled(PS2Port::Second);
 }
 
 void preInitSecondChannel() {
   x86_outb(kCommandPort, PS2Command::DISABLE_SECOND_PORT);
   ControllerConfiguration configuration = getConfiguration();
-  configuration.setInterrupt(Port::Second, false);
-  configuration.setClockDisabled(Port::Second, false);
+  configuration.setInterrupt(PS2Port::Second, false);
+  configuration.setClockDisabled(PS2Port::Second, false);
   setConfiguration(configuration);
 }
 
-bool testPort(Port port) {
-  PS2Command command = port == Port::First ? PS2Command::TEST_FIRST_PORT
-                                           : PS2Command::TEST_SECOND_PORT;
+bool testPort(PS2Port port) {
+  PS2Command command = port == PS2Port::First ? PS2Command::TEST_FIRST_PORT
+                                              : PS2Command::TEST_SECOND_PORT;
   x86_outb(kCommandPort, command);
 
   uint8_t result = readByte();
   return result == 0;
 }
 
-void enablePort(Port port) {
-  PS2Command command = port == Port::First ? PS2Command::ENABLE_FIRST_PORT
-                                           : PS2Command::ENABLE_SECOND_PORT;
+void enablePort(PS2Port port) {
+  PS2Command command = port == PS2Port::First ? PS2Command::ENABLE_FIRST_PORT
+                                              : PS2Command::ENABLE_SECOND_PORT;
   x86_outb(kCommandPort, command);
   ControllerConfiguration configuration = getConfiguration();
   configuration.setInterrupt(port, true);
   setConfiguration(configuration);
 }
 
-void sendBytesToDevice(Port port, mysty::Span<uint8_t> data) {
-  if (port == Port::First) {
+void sendBytesToDevice(PS2Port port, mysty::Span<uint8_t> data) {
+  if (port == PS2Port::First) {
     for (auto byte : data) {
       writeByte(byte);
     }
-  } else if (port == Port::Second) {
+  } else if (port == PS2Port::Second) {
     for (auto byte : data) {
       x86_outb(kCommandPort, PS2Command::SECOND_PORT_WRITE);
       writeByte(byte);
@@ -247,15 +243,15 @@ void sendBytesToDevice(Port port, mysty::Span<uint8_t> data) {
   }
 }
 
-void flushDeviceReadBuffer(Port port) {
+void flushDeviceReadBuffer(PS2Port port) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
-      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+      port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
   dataBuffer.clear();
 }
 
-uint8_t readNextByteFromDevice(Port port) {
+uint8_t readNextByteFromDevice(PS2Port port) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
-      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+      port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
   while (dataBuffer.size() == 0) {
     awaitInterrupt();
   }
@@ -263,9 +259,9 @@ uint8_t readNextByteFromDevice(Port port) {
 }
 
 mysty::Optional<uint8_t> readNextByteFromDeviceTimeout(
-    Port port, size_t numAttempts) {
+    PS2Port port, size_t numAttempts) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
-      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+      port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
   for (size_t i = 0; i < numAttempts && dataBuffer.size() == 0; i++) {
     awaitInterrupt();
   }
@@ -286,7 +282,7 @@ mysty::Optional<PS2DeviceType> decodeDeviceType(
   return {};
 }
 
-mysty::Optional<PS2DeviceType> identifyDevice(Port port) {
+mysty::Optional<PS2DeviceType> identifyDevice(PS2Port port) {
   constexpr size_t kIdentifyDeviceTimeoutTime = 10;
   mysty::Optional<uint8_t> nextByte;
 
@@ -343,16 +339,16 @@ bool initializePS2Driver() {
     return false;
   }
 
-  disablePort(Port::First);
-  disablePort(Port::Second);
+  disablePort(PS2Port::First);
+  disablePort(PS2Port::Second);
 
   // Flush ouptutBuffer
   x86_inb(kDataPort);
 
   ControllerConfiguration configuration = getConfiguration();
-  configuration.setInterrupt(Port::First, false);
+  configuration.setInterrupt(PS2Port::First, false);
   configuration.setFirstPortTranslation(false);
-  configuration.setClockDisabled(Port::First, true);
+  configuration.setClockDisabled(PS2Port::First, true);
   setConfiguration(configuration);
 
   if (!selfTest(configuration)) {
@@ -367,8 +363,8 @@ bool initializePS2Driver() {
     preInitSecondChannel();
   }
 
-  bool firstPortValid = testPort(Port::First);
-  bool secondPortValid = isDualChannel && testPort(Port::Second);
+  bool firstPortValid = testPort(PS2Port::First);
+  bool secondPortValid = isDualChannel && testPort(PS2Port::Second);
 
   if (!firstPortValid && !secondPortValid) {
     constexpr mysty::StringView kErrorMessage{"No working PS/2 ports"};
@@ -377,10 +373,10 @@ bool initializePS2Driver() {
   }
 
   if (firstPortValid) {
-    enablePort(Port::First);
+    enablePort(PS2Port::First);
   }
   if (secondPortValid) {
-    enablePort(Port::Second);
+    enablePort(PS2Port::Second);
   }
 
   firstPortReadBuffer.emplace();
@@ -398,21 +394,23 @@ bool initializePS2Driver() {
       InterruptRange::PIC);
 
   if (firstPortValid) {
-    mysty::Optional<PS2DeviceType> firstPortDevice =
-        identifyDevice(Port::First);
-    if (firstPortDevice.has_value()) {
-      // TODO: setup device
-    }
+    firstPortDevice = identifyDevice(PS2Port::First);
   }
   if (secondPortValid) {
-    mysty::Optional<PS2DeviceType> secondPortDevice =
-        identifyDevice(Port::Second);
-    if (secondPortDevice.has_value()) {
-      // TODO: setup device
-    }
+    secondPortDevice = identifyDevice(PS2Port::Second);
   }
 
   return true;
+}
+
+mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device) {
+  if (firstPortDevice.has_value() && *firstPortDevice == device) {
+    return PS2PortHandle{PS2Port::First};
+  }
+  if (secondPortDevice.has_value() && *secondPortDevice == device) {
+    return PS2PortHandle{PS2Port::Second};
+  }
+  return {};
 }
 
 } // namespace simpleos::hid

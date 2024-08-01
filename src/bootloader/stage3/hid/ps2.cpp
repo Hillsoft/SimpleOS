@@ -1,13 +1,21 @@
 #include "hid/ps2.hpp"
 
+#include "interrupts.hpp"
+#include "mysty/circularBuffer.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
+#include "mysty/optional.hpp"
 #include "mysty/span.hpp"
 #include "x86.hpp"
 
 namespace simpleos::hid {
 
 namespace {
+
+constinit mysty::StorageFor<mysty::FixedCircularBuffer<uint8_t, 64>>
+    firstPortReadBuffer;
+constinit mysty::StorageFor<mysty::FixedCircularBuffer<uint8_t, 64>>
+    secondPortReadBuffer;
 
 constexpr uint16_t kDataPort = 0x60;
 constexpr uint16_t kStatusPort = 0x64;
@@ -27,6 +35,11 @@ enum PS2Command : uint8_t {
   TEST_FIRST_PORT = 0xAB,
   DISABLE_FIRST_PORT = 0xAD,
   ENABLE_FIRST_PORT = 0xAE,
+  SECOND_PORT_WRITE = 0xD4,
+};
+
+enum class PS2DeviceType {
+  MF2KEYBOARD,
 };
 
 struct ControllerConfiguration {
@@ -174,6 +187,7 @@ ControllerConfiguration getConfiguration() {
 
 void setConfiguration(ControllerConfiguration configuration) {
   x86_outb(kCommandPort, PS2Command::WRITE_CONTROLLER_CONFIGURATION);
+  writeByte(configuration.getData());
 }
 
 bool selfTest(ControllerConfiguration expectedConfiguration) {
@@ -218,6 +232,106 @@ void enablePort(Port port) {
   ControllerConfiguration configuration = getConfiguration();
   configuration.setInterrupt(port, true);
   setConfiguration(configuration);
+}
+
+void sendBytesToDevice(Port port, mysty::Span<uint8_t> data) {
+  if (port == Port::First) {
+    for (auto byte : data) {
+      writeByte(byte);
+    }
+  } else if (port == Port::Second) {
+    for (auto byte : data) {
+      x86_outb(kCommandPort, PS2Command::SECOND_PORT_WRITE);
+      writeByte(byte);
+    }
+  }
+}
+
+void flushDeviceReadBuffer(Port port) {
+  mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
+      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+  dataBuffer.clear();
+}
+
+uint8_t readNextByteFromDevice(Port port) {
+  mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
+      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+  while (dataBuffer.size() == 0) {
+    awaitInterrupt();
+  }
+  return dataBuffer.pop_front();
+}
+
+mysty::Optional<uint8_t> readNextByteFromDeviceTimeout(
+    Port port, size_t numAttempts) {
+  mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
+      port == Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
+  for (size_t i = 0; i < numAttempts && dataBuffer.size() == 0; i++) {
+    awaitInterrupt();
+  }
+
+  if (dataBuffer.size() == 0) {
+    return {};
+  } else {
+    return dataBuffer.pop_front();
+  }
+}
+
+mysty::Optional<PS2DeviceType> decodeDeviceType(
+    const mysty::FixedArray<uint8_t, 2>& code) {
+  if (code[0] == 0xAB && code[1] == 0x83) {
+    return PS2DeviceType::MF2KEYBOARD;
+  }
+
+  return {};
+}
+
+mysty::Optional<PS2DeviceType> identifyDevice(Port port) {
+  constexpr size_t kIdentifyDeviceTimeoutTime = 10;
+  mysty::Optional<uint8_t> nextByte;
+
+  flushDeviceReadBuffer(port);
+  sendBytesToDevice(port, mysty::FixedArray<uint8_t, 1>{0xF5});
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (!nextByte.has_value() || *nextByte != 0xFA) {
+    return {};
+  }
+
+  flushDeviceReadBuffer(port);
+  sendBytesToDevice(port, mysty::FixedArray<uint8_t, 1>{0xFF});
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (!nextByte.has_value() || *nextByte != 0xFA) {
+    return {};
+  }
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (!nextByte.has_value() || *nextByte != 0xAA) {
+    return {};
+  }
+
+  flushDeviceReadBuffer(port);
+  sendBytesToDevice(port, mysty::FixedArray<uint8_t, 1>{0xF2});
+
+  mysty::FixedArray<uint8_t, 2> deviceCode;
+
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (!nextByte.has_value() || *nextByte != 0xFA) {
+    return {};
+  }
+
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (!nextByte.has_value()) {
+    return {};
+  }
+  deviceCode[0] = *nextByte;
+
+  nextByte = readNextByteFromDeviceTimeout(port, kIdentifyDeviceTimeoutTime);
+  if (nextByte.has_value()) {
+    deviceCode[1] = *nextByte;
+  } else {
+    deviceCode[1] = 0;
+  }
+
+  return decodeDeviceType(deviceCode);
 }
 
 } // namespace
@@ -269,7 +383,46 @@ bool initializePS2Driver() {
     enablePort(Port::Second);
   }
 
-  return false;
+  firstPortReadBuffer.emplace();
+  secondPortReadBuffer.emplace();
+
+  registerInterrupt(
+      1,
+      ps2Port1InterruptHandlerWrapper,
+      InterruptType::Interrupt,
+      InterruptRange::PIC);
+  registerInterrupt(
+      12,
+      ps2Port2InterruptHandlerWrapper,
+      InterruptType::Interrupt,
+      InterruptRange::PIC);
+
+  if (firstPortValid) {
+    mysty::Optional<PS2DeviceType> firstPortDevice =
+        identifyDevice(Port::First);
+    if (firstPortDevice.has_value()) {
+      // TODO: setup device
+    }
+  }
+  if (secondPortValid) {
+    mysty::Optional<PS2DeviceType> secondPortDevice =
+        identifyDevice(Port::Second);
+    if (secondPortDevice.has_value()) {
+      // TODO: setup device
+    }
+  }
+
+  return true;
 }
 
 } // namespace simpleos::hid
+
+extern "C" {
+ASM_CALLABLE void ps2Port1InterruptHandler() {
+  simpleos::hid::firstPortReadBuffer->emplace_back(simpleos::hid::readByte());
+}
+
+ASM_CALLABLE void ps2Port2InterruptHandler() {
+  simpleos::hid::secondPortReadBuffer->emplace_back(simpleos::hid::readByte());
+}
+}

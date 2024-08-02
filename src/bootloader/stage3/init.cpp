@@ -2,6 +2,7 @@
 
 #include "disk.hpp"
 #include "fat.hpp"
+#include "globaleventqueue.hpp"
 #include "hid/ps2.hpp"
 #include "interrupts.hpp"
 #include "memory.hpp"
@@ -22,6 +23,8 @@ bool initialize(uint8_t bootDrive) {
     mysty::puts(errorMessage);
     return false;
   }
+
+  initializeEventQueue();
 
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);

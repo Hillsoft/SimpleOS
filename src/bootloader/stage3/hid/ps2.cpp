@@ -1,8 +1,10 @@
 #include "hid/ps2.hpp"
 
+#include "globaleventqueue.hpp"
 #include "interrupts.hpp"
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
+#include "mysty/smart_pointer.hpp"
 #include "x86.hpp"
 
 namespace simpleos::hid {
@@ -328,6 +330,37 @@ mysty::Optional<PS2DeviceType> identifyDevice(PS2Port port) {
   return decodeDeviceType(deviceCode);
 }
 
+template <PS2Port port>
+bool hasRegisteredEventHandler = false;
+
+template <PS2Port port>
+PS2InputHandler handlerFunc = nullptr;
+
+template <PS2Port port>
+class PS2InputEvent {};
+
+template <PS2Port port>
+class PS2InputEventHandler : public EventHandler<PS2InputEvent<port>> {
+ public:
+  void handleEvent(PS2InputEvent<port> /* event */) override {
+    handlerFunc<port>();
+  }
+};
+
+template <PS2Port port>
+mysty::StorageFor<PS2InputEventHandler<port>> eventHandler;
+
+template <PS2Port port>
+void registerPS2Handler(PS2InputHandler handler) {
+  handlerFunc<port> = handler;
+
+  if (!hasRegisteredEventHandler<port>) {
+    hasRegisteredEventHandler<port> = true;
+    eventHandler<port>.emplace();
+    registerHandler(&*eventHandler<port>);
+  }
+}
+
 } // namespace
 
 bool initializePS2Driver() {
@@ -421,14 +454,27 @@ mysty::FixedCircularBuffer<uint8_t, 64>& getDeviceBuffer(
                                                 : *secondPortReadBuffer;
 }
 
+void registerPS2InputHandler(
+    PS2PortHandle portHandle, PS2InputHandler handler) {
+  if (portHandle.getPort() == PS2Port::First) {
+    registerPS2Handler<PS2Port::First>(handler);
+  } else if (portHandle.getPort() == PS2Port::Second) {
+    registerPS2Handler<PS2Port::Second>(handler);
+  }
+}
+
 } // namespace simpleos::hid
 
 extern "C" {
 ASM_CALLABLE void ps2Port1InterruptHandler() {
   simpleos::hid::firstPortReadBuffer->emplace_back(simpleos::hid::readByte());
+  simpleos::scheduleEvent(
+      simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::First>{});
 }
 
 ASM_CALLABLE void ps2Port2InterruptHandler() {
   simpleos::hid::secondPortReadBuffer->emplace_back(simpleos::hid::readByte());
+  simpleos::scheduleEvent(
+      simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::Second>{});
 }
 }

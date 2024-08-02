@@ -7,6 +7,8 @@
 
 namespace simpleos::hid {
 
+using PS2InputHandler = void (*)();
+
 enum class PS2DeviceType {
   MF2KEYBOARD,
 };
@@ -32,6 +34,8 @@ mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device);
 void sendBytesToDevice(PS2PortHandle portHandle, mysty::Span<uint8_t> bytes);
 mysty::FixedCircularBuffer<uint8_t, 64>& getDeviceBuffer(
     PS2PortHandle portHandle);
+
+void registerPS2InputHandler(PS2PortHandle portHandle, PS2InputHandler handler);
 
 } // namespace simpleos::hid
 

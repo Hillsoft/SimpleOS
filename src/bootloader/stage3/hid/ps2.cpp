@@ -427,9 +427,9 @@ bool initializePS2Driver() {
   if (firstPortValid) {
     firstPortDevice = identifyDevice(PS2Port::First);
   }
-  if (secondPortValid) {
-    secondPortDevice = identifyDevice(PS2Port::Second);
-  }
+  // if (secondPortValid) {
+  //   secondPortDevice = identifyDevice(PS2Port::Second);
+  // }
 
   return true;
 }

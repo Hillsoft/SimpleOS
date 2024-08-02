@@ -55,4 +55,7 @@ concept trivially_destructible = __has_trivial_destructor(T);
 template <typename T>
 concept non_trivially_destructible = !trivially_destructible<T>;
 
+template <typename T, typename U>
+concept is_base_of = __is_base_of(T, U);
+
 } // namespace mysty

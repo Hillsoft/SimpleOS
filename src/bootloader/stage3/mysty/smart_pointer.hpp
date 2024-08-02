@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mysty/typeattributes.hpp"
 #include "mysty/utility.hpp"
 
 namespace mysty {
@@ -20,6 +21,10 @@ class unique_ptr {
     }
     ptr_ = other.relase();
   }
+
+  template <typename U>
+    requires(mysty::is_base_of<T, U>)
+  unique_ptr(unique_ptr<U>&& other) : ptr_(other.release()) {}
 
   ~unique_ptr() {
     if (ptr_ != nullptr) {

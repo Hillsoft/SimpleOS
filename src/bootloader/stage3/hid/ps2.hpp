@@ -34,6 +34,8 @@ mysty::Optional<PS2PortHandle> getPortForDevice(PS2DeviceType device);
 void sendBytesToDevice(PS2PortHandle portHandle, mysty::Span<uint8_t> bytes);
 mysty::FixedCircularBuffer<uint8_t, 64>& getDeviceBuffer(
     PS2PortHandle portHandle);
+mysty::Optional<uint8_t> awaitByteFromDevice(
+    PS2PortHandle portHandle, size_t timeout);
 
 void registerPS2InputHandler(PS2PortHandle portHandle, PS2InputHandler handler);
 

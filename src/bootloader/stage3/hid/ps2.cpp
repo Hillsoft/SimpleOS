@@ -454,6 +454,11 @@ mysty::FixedCircularBuffer<uint8_t, 64>& getDeviceBuffer(
                                                 : *secondPortReadBuffer;
 }
 
+mysty::Optional<uint8_t> awaitByteFromDevice(
+    PS2PortHandle portHandle, size_t timeout) {
+  return readNextByteFromDeviceTimeout(portHandle.getPort(), timeout);
+}
+
 void registerPS2InputHandler(
     PS2PortHandle portHandle, PS2InputHandler handler) {
   if (portHandle.getPort() == PS2Port::First) {

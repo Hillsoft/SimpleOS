@@ -88,10 +88,8 @@ cstart(uint8_t bootDrive) {
     return;
   }
 
-  testFile();
-  testMemory();
-  testString();
-
-  asm volatile("xor %eax, %eax\ndiv %eax, %eax");
+  // testFile();
+  // testMemory();
+  // testString();
 }
 }

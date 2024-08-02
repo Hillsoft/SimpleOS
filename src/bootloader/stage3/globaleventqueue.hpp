@@ -30,7 +30,7 @@ class EventDispatcherImplBase {
  public:
   virtual ~EventDispatcherImplBase() = default;
 
-  virtual void dispatch() {}
+  virtual void dispatch() && {}
 };
 
 template <typename TEvent>
@@ -40,7 +40,7 @@ class EventDispatcherImpl : public EventDispatcherImplBase {
 
   virtual ~EventDispatcherImpl() = default;
 
-  virtual void handleEvent() && {
+  void dispatch() && override {
     EventHandler<TEvent>* handler = getHandler<TEvent>();
     if (handler != nullptr) {
       handler->handleEvent(mysty::move(event_));

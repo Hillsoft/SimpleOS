@@ -26,7 +26,7 @@ bool areEventsWaiting() {
 }
 
 void dispatchNextEvent() {
-  eventQueue->pop_front()->dispatch();
+  (*eventQueue->pop_front()).dispatch();
 }
 
 } // namespace simpleos

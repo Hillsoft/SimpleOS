@@ -40,8 +40,10 @@ class unique_ptr {
 
   T* get() const { return ptr_; }
 
-  T& operator*() const { return *ptr_; }
-  T* operator->() const { return ptr_; }
+  T& operator*() const& { return *ptr_; }
+  T&& operator*() && { return mysty::move(*ptr_); }
+
+  T* operator->() const& { return ptr_; }
 
  private:
   T* ptr_;

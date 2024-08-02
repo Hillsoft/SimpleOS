@@ -3,6 +3,7 @@
 #include "disk.hpp"
 #include "fat.hpp"
 #include "globaleventqueue.hpp"
+#include "hid/keyboard.hpp"
 #include "hid/ps2.hpp"
 #include "interrupts.hpp"
 #include "memory.hpp"
@@ -24,6 +25,7 @@ bool initialize(uint8_t bootDrive) {
     return false;
   }
 
+  constexpr mysty::StringView eventQueueMessage{"  Event Queue...\n"};
   initializeEventQueue();
 
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
@@ -51,13 +53,19 @@ bool initialize(uint8_t bootDrive) {
     return false;
   }
 
-  constexpr mysty::StringView ps2Message{"  PS/2 Controller\n"};
+  constexpr mysty::StringView ps2Message{"  PS/2 Controller...\n"};
   mysty::puts(ps2Message);
   if (!hid::initializePS2Driver()) {
     constexpr mysty::StringView errorMessage{
         "Failed to initialise PS/2 Controller\n"};
     mysty::puts(errorMessage);
-    return false;
+  }
+
+  constexpr mysty::StringView keyboardMessage{"  Keyboard...\n"};
+  mysty::puts(keyboardMessage);
+  if (!hid::initializeKeyboard()) {
+    constexpr mysty::StringView errorMessage{"Failed to initialise keyboard\n"};
+    mysty::puts(errorMessage);
   }
 
   constexpr mysty::StringView completeMessage{"Initialisation complete\n"};

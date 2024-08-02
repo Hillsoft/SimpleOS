@@ -473,13 +473,18 @@ void registerPS2InputHandler(
 extern "C" {
 ASM_CALLABLE void ps2Port1InterruptHandler() {
   simpleos::hid::firstPortReadBuffer->emplace_back(simpleos::hid::readByte());
-  simpleos::scheduleEvent(
-      simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::First>{});
+  if (simpleos::hid::hasRegisteredEventHandler<simpleos::hid::PS2Port::First>) {
+    simpleos::scheduleEvent(
+        simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::First>{});
+  }
 }
 
 ASM_CALLABLE void ps2Port2InterruptHandler() {
   simpleos::hid::secondPortReadBuffer->emplace_back(simpleos::hid::readByte());
-  simpleos::scheduleEvent(
-      simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::Second>{});
+  if (simpleos::hid::hasRegisteredEventHandler<
+          simpleos::hid::PS2Port::Second>) {
+    simpleos::scheduleEvent(
+        simpleos::hid::PS2InputEvent<simpleos::hid::PS2Port::Second>{});
+  }
 }
 }

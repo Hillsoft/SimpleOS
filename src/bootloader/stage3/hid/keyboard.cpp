@@ -190,32 +190,32 @@ KeyCode decodeKey(uint8_t rawKeyCode) {
   };
 }
 
-char asciiDecode(KeyCode keyCode) {
+char asciiDecode(KeyCode keyCode, KeyboardModifierSet modifiers) {
   switch (keyCode) {
     case KeyCode::TAB:
       return '\t';
     case KeyCode::BACK_TICK:
       return '`';
     case KeyCode::NUM0:
-      return '0';
+      return modifiers.shiftHeld ? ')' : '0';
     case KeyCode::NUM1:
-      return '1';
+      return modifiers.shiftHeld ? '!' : '1';
     case KeyCode::NUM2:
-      return '2';
+      return modifiers.shiftHeld ? '"' : '2';
     case KeyCode::NUM3:
       return '3';
     case KeyCode::NUM4:
-      return '4';
+      return modifiers.shiftHeld ? '$' : '4';
     case KeyCode::NUM5:
-      return '5';
+      return modifiers.shiftHeld ? '%' : '5';
     case KeyCode::NUM6:
-      return '6';
+      return modifiers.shiftHeld ? '^' : '6';
     case KeyCode::NUM7:
-      return '7';
+      return modifiers.shiftHeld ? '&' : '7';
     case KeyCode::NUM8:
-      return '8';
+      return modifiers.shiftHeld ? '*' : '8';
     case KeyCode::NUM9:
-      return '9';
+      return modifiers.shiftHeld ? '(' : '9';
     case KeyCode::KEYPAD0:
       return '0';
     case KeyCode::KEYPAD1:
@@ -249,79 +249,79 @@ char asciiDecode(KeyCode keyCode) {
     case KeyCode::ENTER:
       return '\n';
     case KeyCode::PERIOD:
-      return '.';
+      return modifiers.shiftHeld ? '>' : '.';
     case KeyCode::COMMA:
-      return ',';
+      return modifiers.shiftHeld ? '<' : ',';
     case KeyCode::SEMICOLON:
-      return ';';
+      return modifiers.shiftHeld ? ':' : ';';
     case KeyCode::DASH:
-      return '-';
+      return modifiers.shiftHeld ? '_' : '-';
     case KeyCode::FORWARD_SLASH:
-      return '/';
+      return modifiers.shiftHeld ? '?' : '/';
     case KeyCode::BACK_SLASH:
-      return '\\';
+      return modifiers.shiftHeld ? '|' : '\\';
     case KeyCode::HASH:
-      return '#';
+      return modifiers.shiftHeld ? '~' : '#';
     case KeyCode::EQUAL:
-      return '=';
+      return modifiers.shiftHeld ? '+' : '=';
     case KeyCode::APOSTROPHE:
-      return '\'';
+      return modifiers.shiftHeld ? '@' : '\'';
     case KeyCode::OPEN_SQUARE_BRACKET:
-      return '[';
+      return modifiers.shiftHeld ? '{' : '[';
     case KeyCode::CLOSE_SQUARE_BRACKET:
-      return ']';
+      return modifiers.shiftHeld ? '}' : ']';
     case KeyCode::A:
-      return 'a';
+      return modifiers.shiftHeld ? 'A' : 'a';
     case KeyCode::B:
-      return 'b';
+      return modifiers.shiftHeld ? 'B' : 'b';
     case KeyCode::C:
-      return 'c';
+      return modifiers.shiftHeld ? 'C' : 'c';
     case KeyCode::D:
-      return 'd';
+      return modifiers.shiftHeld ? 'D' : 'd';
     case KeyCode::E:
-      return 'e';
+      return modifiers.shiftHeld ? 'E' : 'e';
     case KeyCode::F:
-      return 'f';
+      return modifiers.shiftHeld ? 'F' : 'f';
     case KeyCode::G:
-      return 'g';
+      return modifiers.shiftHeld ? 'G' : 'g';
     case KeyCode::H:
-      return 'h';
+      return modifiers.shiftHeld ? 'H' : 'h';
     case KeyCode::I:
-      return 'i';
+      return modifiers.shiftHeld ? 'I' : 'i';
     case KeyCode::J:
-      return 'j';
+      return modifiers.shiftHeld ? 'J' : 'j';
     case KeyCode::K:
-      return 'k';
+      return modifiers.shiftHeld ? 'K' : 'k';
     case KeyCode::L:
-      return 'l';
+      return modifiers.shiftHeld ? 'L' : 'l';
     case KeyCode::M:
-      return 'm';
+      return modifiers.shiftHeld ? 'M' : 'm';
     case KeyCode::N:
-      return 'n';
+      return modifiers.shiftHeld ? 'N' : 'n';
     case KeyCode::O:
-      return 'o';
+      return modifiers.shiftHeld ? 'O' : 'o';
     case KeyCode::P:
-      return 'p';
+      return modifiers.shiftHeld ? 'P' : 'p';
     case KeyCode::Q:
-      return 'q';
+      return modifiers.shiftHeld ? 'Q' : 'q';
     case KeyCode::R:
-      return 'r';
+      return modifiers.shiftHeld ? 'R' : 'r';
     case KeyCode::S:
-      return 's';
+      return modifiers.shiftHeld ? 'S' : 's';
     case KeyCode::T:
-      return 't';
+      return modifiers.shiftHeld ? 'T' : 't';
     case KeyCode::U:
-      return 'u';
+      return modifiers.shiftHeld ? 'U' : 'u';
     case KeyCode::V:
-      return 'v';
+      return modifiers.shiftHeld ? 'V' : 'v';
     case KeyCode::W:
-      return 'w';
+      return modifiers.shiftHeld ? 'W' : 'w';
     case KeyCode::X:
-      return 'x';
+      return modifiers.shiftHeld ? 'X' : 'x';
     case KeyCode::Y:
-      return 'y';
+      return modifiers.shiftHeld ? 'Y' : 'y';
     case KeyCode::Z:
-      return 'z';
+      return modifiers.shiftHeld ? 'Z' : 'z';
     default:
       return 0;
   }
@@ -391,7 +391,7 @@ void keyboardInputHandler() {
 
   KeyboardModifierSet combinedModifierSet = leftModifierSet * rightModifierSet;
 
-  char currentCharacter = asciiDecode(code);
+  char currentCharacter = asciiDecode(code, combinedModifierSet);
 
   KeyboardEvent event;
   event.type = eventType;

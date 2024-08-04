@@ -1,5 +1,6 @@
 #include "hid/keyboard.hpp"
 
+#include "globaleventqueue.hpp"
 #include "hid/ps2.hpp"
 #include "mysty/array.hpp"
 #include "mysty/int.hpp"
@@ -328,6 +329,44 @@ char asciiDecode(KeyCode keyCode) {
 
 mysty::Optional<PS2PortHandle> keyboardPortHandle;
 
+KeyboardModifierSet leftModifierSet;
+KeyboardModifierSet rightModifierSet;
+
+KeyboardModifierSet operator*(
+    const KeyboardModifierSet& a, const KeyboardModifierSet& b) {
+  return KeyboardModifierSet{
+      .controlHeld = a.controlHeld || b.controlHeld,
+      .shiftHeld = a.shiftHeld || b.shiftHeld,
+      .altHeld = a.altHeld || b.altHeld,
+  };
+}
+
+void updateModifierSets(KeyboardEvent::Type eventType, KeyCode code) {
+  bool setHeld = eventType == KeyboardEvent::Type::PRESS;
+  switch (code) {
+    case KeyCode::LEFT_CONTROL:
+      leftModifierSet.controlHeld = setHeld;
+      break;
+    case KeyCode::LEFT_SHIFT:
+      leftModifierSet.shiftHeld = setHeld;
+      break;
+    case KeyCode::LEFT_ALT:
+      leftModifierSet.altHeld = setHeld;
+      break;
+    case KeyCode::RIGHT_CONTROL:
+      rightModifierSet.controlHeld = setHeld;
+      break;
+    case KeyCode::RIGHT_SHIFT:
+      rightModifierSet.shiftHeld = setHeld;
+      break;
+    case KeyCode::RIGHT_ALT:
+      rightModifierSet.altHeld = setHeld;
+      break;
+    default:
+      break;
+  }
+}
+
 void keyboardInputHandler() {
   // We assume keyboardPortHandle is not empty, this will never be registered
   // otherwise
@@ -335,14 +374,35 @@ void keyboardInputHandler() {
   mysty::FixedCircularBuffer<uint8_t, 64U>& buffer =
       getDeviceBuffer(*keyboardPortHandle);
 
-  while (buffer.size() > 0) {
-    uint8_t rawByte = buffer.pop_front();
-    char currentCharacter = asciiDecode(decodeKey(rawByte));
-    if (currentCharacter > 0) {
-      mysty::printf("%X: %c\n", rawByte, currentCharacter);
-    } else {
-      mysty::printf("%X: unprintable\n", rawByte);
+  KeyboardEvent::Type eventType = buffer.peek_front() == 0xF0
+      ? KeyboardEvent::Type::RELEASE
+      : KeyboardEvent::Type::PRESS;
+  if (eventType == KeyboardEvent::Type::RELEASE) {
+    if (buffer.size() < 2) {
+      return;
     }
+    buffer.pop_front();
+  }
+
+  uint8_t rawByte = buffer.pop_front();
+  KeyCode code = decodeKey(rawByte);
+
+  updateModifierSets(eventType, code);
+
+  KeyboardModifierSet combinedModifierSet = leftModifierSet * rightModifierSet;
+
+  char currentCharacter = asciiDecode(code);
+
+  KeyboardEvent event;
+  event.type = eventType;
+  event.code = code;
+  event.ascii = currentCharacter;
+  event.modifierSet = combinedModifierSet;
+
+  scheduleEvent(event);
+
+  if (event.ascii > 0 && eventType == KeyboardEvent::Type::RELEASE) {
+    mysty::putc(event.ascii);
   }
 }
 

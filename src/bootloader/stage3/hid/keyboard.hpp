@@ -95,9 +95,9 @@ enum class KeyCode {
 };
 
 struct KeyboardModifierSet {
-  bool controlHeld;
-  bool shiftHeld;
-  bool altHeld;
+  bool controlHeld = false;
+  bool shiftHeld = false;
+  bool altHeld = false;
 };
 
 struct KeyboardEvent {

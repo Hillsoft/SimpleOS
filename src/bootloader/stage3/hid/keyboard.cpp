@@ -187,6 +187,141 @@ KeyCode decodeKey(uint8_t rawKeyCode) {
   };
 }
 
+char asciiDecode(KeyCode keyCode) {
+  switch (keyCode) {
+    case KeyCode::TAB:
+      return '\t';
+    case KeyCode::BACK_TICK:
+      return '`';
+    case KeyCode::NUM0:
+      return '0';
+    case KeyCode::NUM1:
+      return '1';
+    case KeyCode::NUM2:
+      return '2';
+    case KeyCode::NUM3:
+      return '3';
+    case KeyCode::NUM4:
+      return '4';
+    case KeyCode::NUM5:
+      return '5';
+    case KeyCode::NUM6:
+      return '6';
+    case KeyCode::NUM7:
+      return '7';
+    case KeyCode::NUM8:
+      return '8';
+    case KeyCode::NUM9:
+      return '9';
+    case KeyCode::KEYPAD0:
+      return '0';
+    case KeyCode::KEYPAD1:
+      return '1';
+    case KeyCode::KEYPAD2:
+      return '2';
+    case KeyCode::KEYPAD3:
+      return '3';
+    case KeyCode::KEYPAD4:
+      return '4';
+    case KeyCode::KEYPAD5:
+      return '5';
+    case KeyCode::KEYPAD6:
+      return '6';
+    case KeyCode::KEYPAD7:
+      return '7';
+    case KeyCode::KEYPAD8:
+      return '8';
+    case KeyCode::KEYPAD9:
+      return '9';
+    case KeyCode::KEYPAD_DOT:
+      return '.';
+    case KeyCode::KEYPAD_PLUS:
+      return '+';
+    case KeyCode::KEYPAD_MINUS:
+      return '-';
+    case KeyCode::KEYPAD_MULTIPLY:
+      return '*';
+    case KeyCode::SPACE:
+      return ' ';
+    case KeyCode::ENTER:
+      return '\n';
+    case KeyCode::PERIOD:
+      return '.';
+    case KeyCode::COMMA:
+      return ',';
+    case KeyCode::SEMICOLON:
+      return ';';
+    case KeyCode::DASH:
+      return '-';
+    case KeyCode::FORWARD_SLASH:
+      return '/';
+    case KeyCode::BACK_SLASH:
+      return '\\';
+    case KeyCode::EQUAL:
+      return '=';
+    case KeyCode::APOSTROPHE:
+      return '\'';
+    case KeyCode::OPEN_SQUARE_BRACKET:
+      return '[';
+    case KeyCode::CLOSE_SQUARE_BRACKET:
+      return ']';
+    case KeyCode::A:
+      return 'a';
+    case KeyCode::B:
+      return 'b';
+    case KeyCode::C:
+      return 'c';
+    case KeyCode::D:
+      return 'd';
+    case KeyCode::E:
+      return 'e';
+    case KeyCode::F:
+      return 'f';
+    case KeyCode::G:
+      return 'g';
+    case KeyCode::H:
+      return 'h';
+    case KeyCode::I:
+      return 'i';
+    case KeyCode::J:
+      return 'j';
+    case KeyCode::K:
+      return 'k';
+    case KeyCode::L:
+      return 'l';
+    case KeyCode::M:
+      return 'm';
+    case KeyCode::N:
+      return 'n';
+    case KeyCode::O:
+      return 'o';
+    case KeyCode::P:
+      return 'p';
+    case KeyCode::Q:
+      return 'q';
+    case KeyCode::R:
+      return 'r';
+    case KeyCode::S:
+      return 's';
+    case KeyCode::T:
+      return 't';
+    case KeyCode::U:
+      return 'u';
+    case KeyCode::V:
+      return 'v';
+    case KeyCode::W:
+      return 'w';
+    case KeyCode::X:
+      return 'x';
+    case KeyCode::Y:
+      return 'y';
+    case KeyCode::Z:
+      return 'z';
+    default:
+      return 0;
+  }
+}
+
 mysty::Optional<PS2PortHandle> keyboardPortHandle;
 
 void keyboardInputHandler() {
@@ -197,7 +332,13 @@ void keyboardInputHandler() {
       getDeviceBuffer(*keyboardPortHandle);
 
   while (buffer.size() > 0) {
-    mysty::printf("%X ", buffer.pop_front());
+    uint8_t rawByte = buffer.pop_front();
+    char currentCharacter = asciiDecode(decodeKey(rawByte));
+    if (currentCharacter > 0) {
+      mysty::printf("%X: %c\n", rawByte, currentCharacter);
+    } else {
+      mysty::printf("%X: unprintable\n", rawByte);
+    }
   }
 }
 

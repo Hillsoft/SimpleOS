@@ -400,10 +400,6 @@ void keyboardInputHandler() {
   event.modifierSet = combinedModifierSet;
 
   scheduleEvent(event);
-
-  if (event.ascii > 0 && eventType == KeyboardEvent::Type::RELEASE) {
-    mysty::putc(event.ascii);
-  }
 }
 
 } // namespace

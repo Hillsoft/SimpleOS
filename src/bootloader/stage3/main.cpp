@@ -8,6 +8,7 @@
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
 #include "mysty/string.hpp"
+#include "terminal.hpp"
 
 namespace {
 
@@ -90,9 +91,7 @@ void __attribute__((cdecl)) __attribute__((externally_visible)) cstart(
     return;
   }
 
-  // testFile();
-  // testMemory();
-  // testString();
+  simpleos::startTerminal();
 
   while (true) {
     if (simpleos::areEventsWaiting()) {

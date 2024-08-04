@@ -94,6 +94,24 @@ enum class KeyCode {
   Z,
 };
 
+struct KeyboardModifierSet {
+  bool controlHeld;
+  bool shiftHeld;
+  bool altHeld;
+};
+
+struct KeyboardEvent {
+  enum Type {
+    PRESS,
+    RELEASE,
+  };
+
+  Type type;
+  KeyCode code;
+  char ascii;
+  KeyboardModifierSet modifierSet;
+};
+
 bool initializeKeyboard();
 
 } // namespace simpleos::hid

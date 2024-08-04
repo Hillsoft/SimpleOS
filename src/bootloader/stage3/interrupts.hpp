@@ -19,7 +19,7 @@ void registerInterrupt(
     InterruptRange range);
 
 inline void awaitInterrupt() {
-  asm volatile("hlt");
+  asm volatile("hlt" : : : "memory");
 }
 
 } // namespace simpleos

@@ -141,6 +141,8 @@ KeyCode decodeKey(uint8_t rawKeyCode) {
     case 0x5B:
       return KeyCode::CLOSE_SQUARE_BRACKET;
     case 0x5D:
+      return KeyCode::HASH;
+    case 0x61:
       return KeyCode::BACK_SLASH;
     case 0x66:
       return KeyCode::BACKSPACE;
@@ -257,6 +259,8 @@ char asciiDecode(KeyCode keyCode) {
       return '/';
     case KeyCode::BACK_SLASH:
       return '\\';
+    case KeyCode::HASH:
+      return '#';
     case KeyCode::EQUAL:
       return '=';
     case KeyCode::APOSTROPHE:

@@ -61,6 +61,7 @@ enum class KeyCode {
   DASH,
   FORWARD_SLASH,
   BACK_SLASH,
+  HASH,
   EQUAL,
   APOSTROPHE,
   OPEN_SQUARE_BRACKET,

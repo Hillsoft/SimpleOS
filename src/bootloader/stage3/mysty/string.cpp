@@ -4,6 +4,17 @@
 
 namespace mysty {
 
+namespace {
+
+constexpr size_t kGrowthFactorNumerator = 3;
+constexpr size_t kGrowthFactorDenominator = 2;
+
+} // namespace
+
+String::String() : size_(0), capacity_(1), buffer_(new char[1]) {
+  buffer_[0] = 0;
+}
+
 String::String(const char* str)
     : size_(strlen(str)), capacity_(size_ + 1), buffer_(new char[capacity_]) {
   mysty::memcpy(buffer_, str, capacity_);
@@ -74,6 +85,27 @@ char* String::get() {
 
 const char* String::get() const {
   return buffer_;
+}
+
+void String::append(char c) {
+  size_t requiredCapacity = size_ + 2;
+  if (capacity_ < requiredCapacity) {
+    size_t newCapacity =
+        (capacity_ * kGrowthFactorNumerator) / kGrowthFactorDenominator;
+    if (newCapacity < requiredCapacity) {
+      newCapacity = requiredCapacity;
+    }
+
+    char* newBuffer = new char[newCapacity];
+    mysty::memcpy(newBuffer, buffer_, capacity_);
+    delete[] buffer_;
+    buffer_ = newBuffer;
+    capacity_ = newCapacity;
+  }
+
+  buffer_[size_] = c;
+  buffer_[size_ + 1] = 0;
+  size_++;
 }
 
 } // namespace mysty

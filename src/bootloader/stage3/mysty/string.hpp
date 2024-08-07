@@ -14,6 +14,7 @@ constexpr size_t strlen(const char* str) noexcept {
 
 class String {
  public:
+  String();
   String(const char* str);
 
   String(String const& other);
@@ -27,6 +28,8 @@ class String {
   size_t size() const;
   char* get();
   const char* get() const;
+
+  void append(char c);
 
  private:
   size_t size_;

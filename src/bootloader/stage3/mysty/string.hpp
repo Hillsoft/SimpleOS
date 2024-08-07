@@ -31,6 +31,8 @@ class String {
 
   void append(char c);
 
+  void exchange(String& other);
+
  private:
   size_t size_;
   size_t capacity_;

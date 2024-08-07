@@ -102,4 +102,18 @@ void String::append(char c) {
   size_++;
 }
 
+void String::exchange(String& other) {
+  size_t tmpSize = size_;
+  size_t tmpCapacity = capacity_;
+  char* tmpBuffer = buffer_;
+
+  size_ = other.size_;
+  capacity_ = other.capacity_;
+  buffer_ = other.buffer_;
+
+  other.size_ = tmpSize;
+  other.capacity_ = tmpCapacity;
+  other.buffer_ = tmpBuffer;
+}
+
 } // namespace mysty

@@ -29,8 +29,6 @@ void executeCommand(mysty::String fullCommand) {
     return;
   }
 
-  mysty::printf("Running command '%s'\n", commandParts[0].get(0));
-
   (*command)(commandParts);
 }
 

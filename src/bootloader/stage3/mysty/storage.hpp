@@ -24,7 +24,7 @@ class StorageFor {
 
   template <typename... Args>
   void emplace(Args... args) {
-    new (buffer_) T(mysty::forward<Args...>(args)...);
+    new (buffer_) T(mysty::forward<Args>(args)...);
   }
 
   void destroy()

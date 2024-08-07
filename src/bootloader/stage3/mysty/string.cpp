@@ -1,15 +1,9 @@
 #include "string.hpp"
 
 #include "mysty/memory.hpp"
+#include "mysty/vectorsettings.hpp"
 
 namespace mysty {
-
-namespace {
-
-constexpr size_t kGrowthFactorNumerator = 3;
-constexpr size_t kGrowthFactorDenominator = 2;
-
-} // namespace
 
 String::String() : size_(0), capacity_(1), buffer_(new char[1]) {
   buffer_[0] = 0;

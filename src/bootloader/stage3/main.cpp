@@ -8,7 +8,7 @@
 #include "mysty/int.hpp"
 #include "mysty/io.hpp"
 #include "mysty/string.hpp"
-#include "terminal.hpp"
+#include "terminal/terminal.hpp"
 
 namespace {
 

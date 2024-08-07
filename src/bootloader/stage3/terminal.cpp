@@ -21,7 +21,8 @@ class KeyboardEventHandler : public EventHandler<hid::KeyboardEvent> {
       if (event.code == hid::KeyCode::ENTER) {
         mysty::putc('\n');
         mysty::puts(currentCommand_);
-        mysty::putc('\n');
+        constexpr mysty::StringView nextCommandPrompt = "\n> ";
+        mysty::puts(nextCommandPrompt);
         currentCommand_ = "";
       } else {
         mysty::putc(event.ascii);
@@ -48,7 +49,7 @@ mysty::StorageFor<TerminalState> state;
 
 void startTerminal() {
   mysty::clrscr();
-  constexpr mysty::StringView kWelcomeMessage = "Welcome to SimpleOS!\n\n\n";
+  constexpr mysty::StringView kWelcomeMessage = "Welcome to SimpleOS!\n\n\n> ";
   mysty::puts(kWelcomeMessage);
 
   state.emplace();

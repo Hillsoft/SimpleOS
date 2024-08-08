@@ -86,22 +86,28 @@ void* malloc(size_t size) {
   size = align(size, sizeof(size_t));
 
   ChunkEntry* curEntry = reinterpret_cast<ChunkEntry*>(mainArena.base);
-  while (isUsed(*curEntry)) {
-    if (curEntry->size == 0) {
-      return nullptr;
-    }
-
+  while (curEntry->size != 0 && (isUsed(*curEntry) || curEntry->size < size)) {
     curEntry = reinterpret_cast<ChunkEntry*>(
         curEntry->size + sizeof(ChunkEntry) +
         reinterpret_cast<uint8_t*>(curEntry));
   }
+  if (curEntry->size == 0) {
+    return nullptr;
+  }
 
-  if (curEntry->size >= size + sizeof(ChunkEntry)) {
+  if (curEntry->size >= size + sizeof(ChunkEntry) + sizeof(size_t)) {
     // space to split
     ChunkEntry* newEntry = reinterpret_cast<ChunkEntry*>(
         size + sizeof(ChunkEntry) + reinterpret_cast<uint8_t*>(curEntry));
     newEntry->prev = curEntry;
     newEntry->size = curEntry->size - size - sizeof(ChunkEntry);
+
+    ChunkEntry* curNext = reinterpret_cast<ChunkEntry*>(
+        curEntry->size + sizeof(ChunkEntry) +
+        reinterpret_cast<uint8_t*>(curEntry));
+    curNext->prev = reinterpret_cast<ChunkEntry*>(
+        reinterpret_cast<size_t>(newEntry) |
+        (0b1 & reinterpret_cast<size_t>(curNext->prev)));
 
     curEntry->size = size;
   }
@@ -129,13 +135,23 @@ void free(void* ptr) {
   ChunkEntry* next = reinterpret_cast<ChunkEntry*>(
       curEntry->size + sizeof(ChunkEntry) +
       reinterpret_cast<uint8_t*>(curEntry));
-  if (!isUsed(*next)) {
+  if (next->size > 0 && !isUsed(*next)) {
     curEntry->size += next->size + sizeof(ChunkEntry);
+    ChunkEntry* newNext = reinterpret_cast<ChunkEntry*>(
+        curEntry->size + sizeof(ChunkEntry) +
+        reinterpret_cast<uint8_t*>(curEntry));
+    newNext->prev = reinterpret_cast<ChunkEntry*>(
+        reinterpret_cast<size_t>(curEntry) |
+        (0b1 & reinterpret_cast<size_t>(newNext->prev)));
+    next = newNext;
   }
 
   ChunkEntry* prev = curEntry->prev;
-  if (!isUsed(*prev)) {
+  if (prev != nullptr && !isUsed(*prev)) {
     prev->size += curEntry->size + sizeof(ChunkEntry);
+    next->prev = reinterpret_cast<ChunkEntry*>(
+        reinterpret_cast<size_t>(prev) |
+        (0b1 & reinterpret_cast<size_t>(next->prev)));
   }
 }
 

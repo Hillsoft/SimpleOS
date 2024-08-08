@@ -6,6 +6,7 @@
 #include "mysty/optional.hpp"
 #include "mysty/string.hpp"
 #include "mysty/typeattributes.hpp"
+#include "mysty/vector.hpp"
 
 namespace mysty {
 
@@ -57,6 +58,12 @@ class Span {
   template <typename T2 = T>
     requires(same_as<T, const char>)
   constexpr Span(String const& s) : Span(s.get(), s.size()) {}
+
+  constexpr Span(const Vector<remove_const_t<T>>& v)
+    requires(is_const<T>)
+      : Span(v.get(), v.size()) {}
+
+  constexpr T* get(size_t i) const { return start_ + i; }
 
   constexpr T& at(size_t i) const { return start_[i]; }
   constexpr T& operator[](size_t i) const { return start_[i]; }

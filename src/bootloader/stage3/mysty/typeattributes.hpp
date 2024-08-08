@@ -30,6 +30,19 @@ template <typename T>
 concept is_not_const = !is_const_t<T>::value;
 
 template <typename T>
+struct remove_const {
+  using type = T;
+};
+
+template <typename T>
+struct remove_const<const T> {
+  using type = T;
+};
+
+template <typename T>
+using remove_const_t = remove_const<T>::type;
+
+template <typename T>
 struct remove_reference {
   typedef T type;
 };

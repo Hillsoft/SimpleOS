@@ -10,8 +10,6 @@
 extern "C" {
 
 void ASM_CALLABLE cstart(uint8_t bootDrive) {
-  mysty::puts("Hello world from long mode!");
-  return;
   if (!simpleos::initialize(bootDrive)) {
     constexpr mysty::StringView errorMessage{
         "Failed to initialise, aborting!\n"};

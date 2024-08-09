@@ -15,7 +15,7 @@ toolchain_binutils: $(BINUTILS_SRC).tar.xz
 		--with-sysroot					\
 		--disable-nls					\
 		--disable-werror
-	$(MAKE) -j8 -C $(BINUTILS_BUILD)
+	$(MAKE) -j12 -C $(BINUTILS_BUILD)
 	$(MAKE) -C $(BINUTILS_BUILD) install
 
 $(BINUTILS_SRC).tar.xz:
@@ -35,7 +35,7 @@ toolchain_gcc: toolchain_binutils $(GCC_SRC).tar.xz
 		--disable-nls					\
 		--enable-languages=c,c++		\
 		--without-headers
-	$(MAKE) -j8 -C $(GCC_BUILD) all-gcc all-target-libgcc
+	$(MAKE) -j12 -C $(GCC_BUILD) all-gcc all-target-libgcc
 	$(MAKE) -C $(GCC_BUILD) install-gcc install-target-libgcc
 	
 $(GCC_SRC).tar.xz:

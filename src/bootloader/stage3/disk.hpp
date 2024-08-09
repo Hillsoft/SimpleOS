@@ -11,7 +11,7 @@ size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer);
 
 extern "C" {
 __attribute__((interrupt)) void floppyInterruptHandlerWrapper(void*);
-__attribute__((cdecl)) __attribute__((externally_visible)) void
+__attribute__((sysv_abi)) __attribute__((externally_visible)) void
 floppyInterruptHandler();
 }
 

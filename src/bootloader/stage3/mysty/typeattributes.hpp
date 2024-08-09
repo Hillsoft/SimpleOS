@@ -60,6 +60,9 @@ struct remove_reference<T&&> {
 #ifdef __INTELLISENSE__
 template <typename T>
 concept trivially_destructible = __is_trivially_destructible(T);
+#elif defined __clang__
+template <typename T>
+concept trivially_destructible = __is_trivially_destructible(T);
 #else
 template <typename T>
 concept trivially_destructible = __has_trivial_destructor(T);

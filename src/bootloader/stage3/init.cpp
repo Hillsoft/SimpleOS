@@ -28,11 +28,11 @@ bool initialize(uint8_t bootDrive) {
   constexpr mysty::StringView eventQueueMessage{"  Event Queue...\n"};
   mysty::puts(eventQueueMessage);
   initializeEventQueue();
-  return false;
 
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);
   simpleos::initializeInterrupts();
+  return false;
 
   constexpr mysty::StringView trapsMessage{"  Fault handling...\n"};
   mysty::puts(trapsMessage);

@@ -93,6 +93,9 @@
 		],
 		"C_Cpp.codeAnalysis.clangTidy.checks.enabled": [
 			"fuchsia-statically-constructed-objects"
+		],
+		"C_Cpp.default.compilerArgs": [
+			"-m64"
 		]
 	}
 }

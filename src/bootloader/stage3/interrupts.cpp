@@ -29,7 +29,8 @@ struct __attribute__((packed)) InterruptDescriptor32 {
   uint16_t offsetHi;
 
   static InterruptDescriptor32 make(void* handler, InterruptType type) {
-    uint32_t address = reinterpret_cast<uint32_t>(handler);
+    uint32_t address =
+        static_cast<uint32_t>(reinterpret_cast<uint64_t>(handler));
     uint8_t gateType = type == InterruptType::Interrupt ? 0xE : 0xF;
     uint8_t attributes = 0x80 | gateType;
     return InterruptDescriptor32{
@@ -102,7 +103,8 @@ void initializeInterrupts() {
 
   tableDefinition = {
       .limit = sizeof(interruptTable),
-      .address = reinterpret_cast<uint32_t>(&interruptTable[0])};
+      .address = static_cast<uint32_t>(
+          reinterpret_cast<uint64_t>(&interruptTable[0]))};
 
   x86_load_interrupt_table(&tableDefinition);
   restoreInterrupts();

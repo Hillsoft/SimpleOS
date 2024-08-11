@@ -58,7 +58,7 @@ __attribute__((
 
 struct __attribute__((packed)) InterruptDescriptorTable {
   uint16_t limit;
-  uint32_t address;
+  uint64_t address;
 };
 
 InterruptDescriptorTable tableDefinition;
@@ -108,8 +108,7 @@ void initializeInterrupts() {
 
   tableDefinition = {
       .limit = sizeof(interruptTable),
-      .address = static_cast<uint32_t>(
-          reinterpret_cast<uint64_t>(&interruptTable[0]))};
+      .address = reinterpret_cast<uint64_t>(&interruptTable[0])};
 
   x86_load_interrupt_table(&tableDefinition);
   restoreInterrupts();

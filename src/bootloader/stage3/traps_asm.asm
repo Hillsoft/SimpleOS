@@ -1,299 +1,146 @@
-bits 32
+bits 64
+
+%macro pushScratchRegisters 0
+    push rax
+    push rdi
+    push rsi
+    push rdx
+    push rcx
+    push r8
+    push r9
+    push r10
+    push r11
+%endmacro
 
 extern divErrorInterruptHandler
 
 global divErrorInterruptHandlerWrapper
 divErrorInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call divErrorInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern debugInterruptHandler
 
 global debugInterruptHandlerWrapper
 debugInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call debugInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern nmiInterruptHandler
 
 global nmiInterruptHandlerWrapper
 nmiInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call nmiInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern breakpointInterruptHandler
 
 global breakpointInterruptHandlerWrapper
 breakpointInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call breakpointInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern overflowInterruptHandler
 
 global overflowInterruptHandlerWrapper
 overflowInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call overflowInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern boundRangeExceededInterruptHandler
 
 global boundRangeExceededInterruptHandlerWrapper
 boundRangeExceededInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call boundRangeExceededInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern invalidOpcodeInterruptHandler
 
 global invalidOpcodeInterruptHandlerWrapper
 invalidOpcodeInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call invalidOpcodeInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern fpuNotAvailableInterruptHandler
 
 global fpuNotAvailableInterruptHandlerWrapper
 fpuNotAvailableInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
+    pushScratchRegisters
+    mov rdi, [esp + 72]
     call fpuNotAvailableInterruptHandler
-    add sp, 4
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    sti
-    iret
 
 extern doubleFaultInterruptHandler
 
 global doubleFaultInterruptHandlerWrapper
 doubleFaultInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call doubleFaultInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret
 
 extern invalidTssInterruptHandler
 
 global invalidTssInterruptHandlerWrapper
 invalidTssInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call invalidTssInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret
 
 extern segmentNotPresentInterruptHandler
 
 global segmentNotPresentInterruptHandlerWrapper
 segmentNotPresentInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call segmentNotPresentInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret
 
 extern stackSegmentFaultInterruptHandler
 
 global stackSegmentFaultInterruptHandlerWrapper
 stackSegmentFaultInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call stackSegmentFaultInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret
 
 extern generalProtectionFaultInterruptHandler
 
 global generalProtectionFaultInterruptHandlerWrapper
 generalProtectionFaultInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call generalProtectionFaultInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret
 
 extern pageFaultInterruptHandler
 
 global pageFaultInterruptHandlerWrapper
 pageFaultInterruptHandlerWrapper:
     cli
-    push eax
-    push ecx
-    push edx
-    mov eax, [esp + 12]
-    push eax
-    mov eax, [esp + 16]
-    push eax
+    pushScratchRegisters
+    mov rdx, cr2
+    mov rsi, [esp + 72]
+    mov rdi, [esp + 80]
     call pageFaultInterruptHandler
-    add sp, 8
-    mov al, 20h
-    out 20h, al
-    pop edx
-    pop ecx
-    pop eax
-    add sp, 4
-    sti
-    iret

@@ -49,6 +49,7 @@ class FixedArray {
   }
 
   template <typename... Args>
+    requires(sizeof...(Args) == size_)
   explicit constexpr FixedArray(Args... args) {
     initializeFromPack<0>(args...);
   }

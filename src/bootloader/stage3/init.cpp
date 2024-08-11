@@ -53,7 +53,6 @@ bool initialize(uint8_t bootDrive) {
     mysty::puts(errorMessage);
     return false;
   }
-  return false;
 
   constexpr mysty::StringView ps2Message{"  PS/2 Controller...\n"};
   mysty::puts(ps2Message);

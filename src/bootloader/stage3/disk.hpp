@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mysty/compat.hpp"
 #include "mysty/int.hpp"
 #include "mysty/span.hpp"
 
@@ -11,8 +12,7 @@ size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer);
 
 extern "C" {
 __attribute__((interrupt)) void floppyInterruptHandlerWrapper(void*);
-__attribute__((sysv_abi)) __attribute__((externally_visible)) void
-floppyInterruptHandler();
+ASM_CALLABLE void floppyInterruptHandler();
 }
 
 } // namespace simpleos::disk

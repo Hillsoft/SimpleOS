@@ -32,7 +32,6 @@ bool initialize(uint8_t bootDrive) {
   constexpr mysty::StringView interruptsMessage{"  Interrupts...\n"};
   mysty::puts(interruptsMessage);
   simpleos::initializeInterrupts();
-  return false;
 
   constexpr mysty::StringView trapsMessage{"  Fault handling...\n"};
   mysty::puts(trapsMessage);
@@ -54,6 +53,7 @@ bool initialize(uint8_t bootDrive) {
     mysty::puts(errorMessage);
     return false;
   }
+  return false;
 
   constexpr mysty::StringView ps2Message{"  PS/2 Controller...\n"};
   mysty::puts(ps2Message);

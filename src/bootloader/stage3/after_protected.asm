@@ -74,14 +74,6 @@ pstart:
   mov dl, [boot_drive]
   jmp GDT.Code:after_x64
 
-.halt:
-  hlt
-  jmp .halt
-
-longmodesetup:
-
-  ret
-
 ScreenBuffer equ 0xB8000
 
 boot_drive: db 0

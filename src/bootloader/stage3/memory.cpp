@@ -69,6 +69,11 @@ bool initializeMemory() {
     return false;
   }
 
+  // Dirty hack so we don't have to implement proper paging support yet...
+  if (mainArena.base + mainArena.length > 0x200000) {
+    mainArena.length = 0x200000 - mainArena.base;
+  }
+
   ChunkEntry* firstEntry = reinterpret_cast<ChunkEntry*>(mainArena.base);
   firstEntry->prev = nullptr;
   firstEntry->size = mainArena.length - 2 * sizeof(ChunkEntry);

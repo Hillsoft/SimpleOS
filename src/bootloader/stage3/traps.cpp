@@ -293,10 +293,14 @@ ASM_CALLABLE void generalProtectionFaultInterruptHandler(
 }
 
 ASM_CALLABLE void pageFaultInterruptHandler(
-    void* faultingAddress, simpleos::PageFaultErrorCode errorCode) {
+    void* faultingAddress,
+    simpleos::PageFaultErrorCode errorCode,
+    void* accessedAddress) {
   mysty::printf(
-      "\nFault at: 0x%X\nPage Fault\n",
-      reinterpret_cast<size_t>(faultingAddress));
+      "\nFault at: 0x%X\nPage Fault %s address 0x%X\n",
+      reinterpret_cast<size_t>(faultingAddress),
+      errorCode.write() ? "writing" : "reading",
+      reinterpret_cast<size_t>(accessedAddress));
   abort();
 }
 }

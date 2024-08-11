@@ -21,38 +21,44 @@ void restoreInterrupts() {
   asm volatile("sti");
 }
 
-struct __attribute__((packed)) InterruptDescriptor32 {
+struct __attribute__((packed)) InterruptDescriptor64 {
   uint16_t offsetLo;
   uint16_t selector;
   uint8_t zero;
   uint8_t typeAttributes;
   uint16_t offsetHi;
+  uint32_t offsetUpper;
+  uint32_t zero2;
 
-  static InterruptDescriptor32 make(void* handler, InterruptType type) {
-    uint32_t address = reinterpret_cast<uint32_t>(handler);
+  static InterruptDescriptor64 make(void* handler, InterruptType type) {
+    uint64_t address = reinterpret_cast<uint64_t>(handler);
     uint8_t gateType = type == InterruptType::Interrupt ? 0xE : 0xF;
     uint8_t attributes = 0x80 | gateType;
-    return InterruptDescriptor32{
+    return InterruptDescriptor64{
         .offsetLo = static_cast<uint16_t>(address & 0xFFFF),
         .selector = 0x8,
         .zero = 0,
         .typeAttributes = attributes,
-        .offsetHi = static_cast<uint16_t>(address >> 16)};
+        .offsetHi = static_cast<uint16_t>((address >> 16) & 0xFFFF),
+        .offsetUpper = static_cast<uint32_t>(address >> 32),
+        .zero2 = 0};
   }
 };
 
 __attribute__((
-    aligned(0x10))) constinit mysty::FixedArray<InterruptDescriptor32, 256>
-    interruptTable{InterruptDescriptor32{
+    aligned(0x10))) constinit mysty::FixedArray<InterruptDescriptor64, 256>
+    interruptTable{InterruptDescriptor64{
         .offsetLo = 0x0,
         .selector = 0x0,
         .zero = 0,
         .typeAttributes = 0x0,
-        .offsetHi = 0x0}};
+        .offsetHi = 0x0,
+        .offsetUpper = 0x0,
+        .zero2 = 0}};
 
 struct __attribute__((packed)) InterruptDescriptorTable {
   uint16_t limit;
-  uint32_t address;
+  uint64_t address;
 };
 
 InterruptDescriptorTable tableDefinition;
@@ -95,14 +101,14 @@ void initializeInterrupts() {
   initializePIC();
 
   for (auto& table : interruptTable) {
-    table = InterruptDescriptor32::make(
+    table = InterruptDescriptor64::make(
         reinterpret_cast<void*>(x86_trivial_interrupt),
         InterruptType::Interrupt);
   }
 
   tableDefinition = {
       .limit = sizeof(interruptTable),
-      .address = reinterpret_cast<uint32_t>(&interruptTable[0])};
+      .address = reinterpret_cast<uint64_t>(&interruptTable[0])};
 
   x86_load_interrupt_table(&tableDefinition);
   restoreInterrupts();
@@ -124,7 +130,7 @@ void registerInterrupt(
   }
 
   interruptTable[offset] =
-      InterruptDescriptor32::make(reinterpret_cast<void*>(handler), type);
+      InterruptDescriptor64::make(reinterpret_cast<void*>(handler), type);
 
   restoreInterrupts();
 }

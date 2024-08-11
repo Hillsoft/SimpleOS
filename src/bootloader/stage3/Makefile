@@ -17,7 +17,7 @@ stage3: $(STAGE3__BUILD_DIR)/main.bin
 $(STAGE3__BUILD_DIR)/%.obj: $(STAGE3__SRC_DIR)/%.asm
 	@mkdir -p $(STAGE3__BUILD_DIR)
 	@echo "Assembling $<"
-	@nasm $< -f elf -o $@
+	@nasm $< -f elf64 -o $@
 
 $(STAGE3__BUILD_DIR)/protected_setup.bin: $(STAGE3__SRC_DIR)/protected_setup.asm
 	@mkdir -p $(STAGE3__BUILD_DIR)

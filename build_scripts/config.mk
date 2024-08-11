@@ -7,10 +7,10 @@ export ASM = nasm
 export LINKFLAGS =
 export LIBS =
 
-export TARGET = i686-elf
+export TARGET = x86_64-elf
 export TARGET_ASM = nasm
 export TARGET_ASMFLAGS =
-export TARGET_CFLAGS = -std=c++20 -O3 -flto -c -ffreestanding -fno-exceptions -fno-asynchronous-unwind-tables -fno-rtti -nostdinc -nostdlib -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=0 -Wswitch-default -Wundef -Werror -Wno-unused
+export TARGET_CFLAGS = -std=c++20 -O3 -flto -m64 -mno-red-zone -c -ffreestanding -fsanitize-undefined-trap-on-error -fno-exceptions -fno-asynchronous-unwind-tables -fno-rtti -nostdinc -nostdlib -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=0 -Wswitch-default -Wundef -Werror -Wno-unused
 export TARGET_CC = $(TARGET)-gcc
 export TARGET_CXX = $(TARGET)-g++
 export TARGET_LD = $(TARGET)-g++

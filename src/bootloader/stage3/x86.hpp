@@ -3,8 +3,8 @@
 #include "mysty/int.hpp"
 
 extern "C" {
-void __attribute__((cdecl)) x86_load_interrupt_table(void* table);
-void __attribute__((cdecl)) x86_trivial_interrupt(void* interruptFrame);
+void __attribute__((sysv_abi)) x86_load_interrupt_table(void* table);
+void __attribute__((sysv_abi)) x86_trivial_interrupt(void* interruptFrame);
 }
 
 inline void x86_outb(uint16_t port, uint8_t value) {

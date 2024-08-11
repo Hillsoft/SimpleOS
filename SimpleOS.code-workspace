@@ -88,11 +88,14 @@
 		"C_Cpp.codeAnalysis.clangTidy.enabled": true,
 		"editor.formatOnSave": true,
 		"C_Cpp.codeAnalysis.clangTidy.args": [
-			"--extra-arg=--target=i686",
+			"--extra-arg=--target=x86_64",
 			"--extra-arg=-Wno-unknown-attributes"
 		],
 		"C_Cpp.codeAnalysis.clangTidy.checks.enabled": [
 			"fuchsia-statically-constructed-objects"
+		],
+		"C_Cpp.default.compilerArgs": [
+			"-m64"
 		]
 	}
 }

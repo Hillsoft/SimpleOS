@@ -2,6 +2,7 @@
 
 #include "interrupts.hpp"
 #include "mysty/array.hpp"
+#include "mysty/atomic.hpp"
 #include "mysty/concepts/iterable.hpp"
 #include "mysty/io.hpp"
 #include "mysty/optional.hpp"
@@ -11,7 +12,7 @@ namespace simpleos::disk {
 
 namespace {
 
-constinit volatile bool g_hasIRQ6 = false;
+constinit mysty::Atomic<bool> g_hasIRQ6{false};
 constinit bool g_hasConfiguredDriveController = false;
 constinit uint8_t g_currentDrive = 0;
 
@@ -310,7 +311,7 @@ bool recalibrate() {
   mysty::FixedArray<uint8_t, 0> output;
   mysty::FixedArray<uint8_t, 0> buffer;
 
-  g_hasIRQ6 = false;
+  g_hasIRQ6.store(false, mysty::MemoryOrder::Relaxed);
 
   if (!executeDriveControllerCommand(
           FloppyCommand::RECALIBRATE, input, output, buffer)) {
@@ -322,7 +323,7 @@ bool recalibrate() {
       g_currentDrive)) {
   }
 
-  while (!g_hasIRQ6) {
+  while (!g_hasIRQ6.load(mysty::MemoryOrder::Relaxed)) {
     awaitInterrupt();
   }
 
@@ -440,7 +441,7 @@ size_t read(uint32_t lba, mysty::Span<uint8_t> outBuffer) {
 
 extern "C" {
 ASM_CALLABLE void floppyInterruptHandler() {
-  g_hasIRQ6 = true;
+  g_hasIRQ6.store(true, mysty::MemoryOrder::Relaxed);
 }
 }
 

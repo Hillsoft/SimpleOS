@@ -246,13 +246,15 @@ void sendBytesToDevice(PS2Port port, mysty::Span<uint8_t> data) {
 void flushDeviceReadBuffer(PS2Port port) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
       port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
-  dataBuffer.clear();
+  while (!dataBuffer.empty()) {
+    dataBuffer.pop_front();
+  }
 }
 
 uint8_t readNextByteFromDevice(PS2Port port) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
       port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
-  while (dataBuffer.size() == 0) {
+  while (dataBuffer.empty()) {
     awaitInterrupt();
   }
   return dataBuffer.pop_front();
@@ -262,11 +264,11 @@ mysty::Optional<uint8_t> readNextByteFromDeviceTimeout(
     PS2Port port, size_t numAttempts) {
   mysty::FixedCircularBuffer<uint8_t, 64>& dataBuffer =
       port == PS2Port::First ? *firstPortReadBuffer : *secondPortReadBuffer;
-  for (size_t i = 0; i < numAttempts && dataBuffer.size() == 0; i++) {
+  for (size_t i = 0; i < numAttempts && dataBuffer.empty(); i++) {
     awaitInterrupt();
   }
 
-  if (dataBuffer.size() == 0) {
+  if (dataBuffer.empty()) {
     return {};
   } else {
     return dataBuffer.pop_front();

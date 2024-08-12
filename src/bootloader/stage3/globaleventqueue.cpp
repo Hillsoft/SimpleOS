@@ -22,7 +22,7 @@ void scheduleEventImpl(mysty::unique_ptr<EventDispatcherImplBase> dispatcher) {
 }
 
 bool areEventsWaiting() {
-  return eventQueue->size() > 0;
+  return !eventQueue->empty();
 }
 
 void dispatchNextEvent() {

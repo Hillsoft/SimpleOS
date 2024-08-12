@@ -374,6 +374,10 @@ void keyboardInputHandler() {
   mysty::FixedCircularBuffer<uint8_t, 64U>& buffer =
       getDeviceBuffer(*keyboardPortHandle);
 
+  if (buffer.empty()) {
+    return;
+  }
+
   KeyboardEvent::Type eventType = buffer.peek_front() == 0xF0
       ? KeyboardEvent::Type::RELEASE
       : KeyboardEvent::Type::PRESS;

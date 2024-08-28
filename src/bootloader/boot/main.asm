@@ -305,7 +305,7 @@ disk_error:
 
 
 msg_loading: db 'Loading...', ENDL, 0
-file_kernel_bin: db 'STAGE3  BIN'
+file_kernel_bin: db 'STAGE2  BIN'
 msg_disk_error: db 'Read from disc failed', ENDL, 0
 msg_kernel_not_found: db 'Kernel not found', ENDL, 0
 kernel_cluster: dw 0

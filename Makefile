@@ -19,11 +19,10 @@ TOOLS_DIR=tools
 
 bootable_floppy: build/main.img
 
-build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage2/main.bin build/bootloader/stage3/main.bin
+build/main.img: build/bootloader/boot/main.bin build/kernel/main.bin res/test.txt build/bootloader/stage3/main.bin
 	dd if=/dev/zero of=$@ bs=512 count=2880 >/dev/null
 	mkfs.fat -F 12 -n "NBOS" $@ >/dev/null
 	dd if=build/bootloader/boot/main.bin of=$@ conv=notrunc >/dev/null
-	mcopy -i $@ build/bootloader/stage2/main.bin "::stage2.bin"
 	mcopy -i $@ build/bootloader/stage3/main.bin "::stage3.bin"
 	mcopy -i $@ res/test.txt "::test.txt"
 	mcopy -i $@ build/kernel/main.bin "::kernel.bin"
@@ -33,10 +32,6 @@ build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
 	@mkdir -p build/bootloader
 	@mkdir -p build/bootloader/boot
 	nasm src/bootloader/boot/main.asm -f bin -o build/bootloader/boot/main.bin
-
-BUILD_DIR=build/bootloader/stage2
-SRC_DIR=src/bootloader/stage2
-include src/bootloader/stage2/Makefile
 
 BUILD_DIR=build/bootloader/stage3
 SRC_DIR=src/bootloader/stage3

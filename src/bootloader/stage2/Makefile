@@ -33,7 +33,4 @@ $(STAGE2__BUILD_DIR)/main.bin: $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)
 	@echo "Linking Stage2"
 	@$(TARGET_LD) $(TARGET_LINKFLAGS) -o $(STAGE2__BUILD_DIR)/main.bin -Xlinker -Map $(STAGE2__BUILD_DIR)/map.txt -T $(STAGE2__SRC_DIR)/linker.ld $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)) $(addprefix $(MYSTY__BUILD_DIR)/,$(MYSTY__OBJS)) $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__ASM_OBJS))
 
-# $(STAGE2__BUILD_DIR)/main.bin: $(STAGE2__BUILD_DIR)/main.bin
-# 	objcopy -O binary $(STAGE2__BUILD_DIR)/main.bin $(STAGE2__BUILD_DIR)/main.bin
-
 -include $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS:.obj=.d))

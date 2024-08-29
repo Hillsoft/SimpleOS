@@ -1,10 +1,15 @@
 #include "mysty/io.hpp"
 #include "mysty/int.hpp"
-#include "x86.hpp"
 
 namespace mysty {
 
 namespace {
+
+inline void x86_outb(uint16_t port, uint8_t value) {
+  asm volatile("out %b[value], %w[port]"
+               : /* no output */
+               : [port] "d"(port), [value] "a"(value));
+}
 
 constexpr int kScreenWidth = 80;
 constexpr int kScreenHeight = 25;

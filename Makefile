@@ -33,6 +33,11 @@ build/bootloader/boot/main.bin: src/bootloader/boot/main.asm
 	@mkdir -p build/bootloader/boot
 	nasm src/bootloader/boot/main.asm -f bin -o build/bootloader/boot/main.bin
 
+BUILD_DIR=build/mysty
+SRC_DIR=src/mysty
+include src/mysty/Makefile
+
+
 BUILD_DIR=build/bootloader/stage2
 SRC_DIR=src/bootloader/stage2
 include src/bootloader/stage2/Makefile

@@ -27,11 +27,11 @@ $(STAGE2__BUILD_DIR)/protected_setup.bin: $(STAGE2__SRC_DIR)/protected_setup.asm
 $(STAGE2__BUILD_DIR)/%.obj:  $(STAGE2__SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo "Compiling $<"
-	@$(TARGET_CXX) $(TARGET_CFLAGS) -I$(STAGE2__SRC_DIR) -MMD -o $@ $<
+	@$(TARGET_CXX) $(TARGET_CFLAGS) -I$(STAGE2__SRC_DIR) -I$(MYSTY__SRC_DIR) -MMD -o $@ $<
 
-$(STAGE2__BUILD_DIR)/main.bin: $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)) $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__ASM_OBJS)) $(STAGE2__BUILD_DIR)/protected_setup.bin $(STAGE2__SRC_DIR)/linker.ld
+$(STAGE2__BUILD_DIR)/main.bin: $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)) $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__ASM_OBJS)) $(STAGE2__BUILD_DIR)/protected_setup.bin $(STAGE2__SRC_DIR)/linker.ld $(addprefix $(MYSTY__BUILD_DIR)/,$(MYSTY__OBJS))
 	@echo "Linking Stage2"
-	@$(TARGET_LD) $(TARGET_LINKFLAGS) -o $(STAGE2__BUILD_DIR)/main.bin -Xlinker -Map $(STAGE2__BUILD_DIR)/map.txt -T $(STAGE2__SRC_DIR)/linker.ld $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)) $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__ASM_OBJS))
+	@$(TARGET_LD) $(TARGET_LINKFLAGS) -o $(STAGE2__BUILD_DIR)/main.bin -Xlinker -Map $(STAGE2__BUILD_DIR)/map.txt -T $(STAGE2__SRC_DIR)/linker.ld $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__OBJS)) $(addprefix $(MYSTY__BUILD_DIR)/,$(MYSTY__OBJS)) $(addprefix $(STAGE2__BUILD_DIR)/,$(STAGE2__ASM_OBJS))
 
 # $(STAGE2__BUILD_DIR)/main.bin: $(STAGE2__BUILD_DIR)/main.bin
 # 	objcopy -O binary $(STAGE2__BUILD_DIR)/main.bin $(STAGE2__BUILD_DIR)/main.bin

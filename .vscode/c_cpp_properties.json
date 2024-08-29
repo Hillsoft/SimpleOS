@@ -12,7 +12,8 @@
             "name": "x86_64-elf",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/bootloader/stage3/"
+                "${workspaceFolder}/src/mysty/",
+                "${workspaceFolder}/src/bootloader/stage2/"
             ],
             "defines": [],
             "cStandard": "c17",
